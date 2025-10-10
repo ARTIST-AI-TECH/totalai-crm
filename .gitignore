@@ -40,3 +40,7 @@ next-env.d.ts
 # Docker
 postgres_data/
 .env*.local
+
+# MCP configs
+.mcp_*.json
+
