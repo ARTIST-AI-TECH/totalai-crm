@@ -23,6 +23,8 @@
 
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-hover: hsl(var(--primary-hover));
+  --color-primary-light: hsl(var(--primary-light));
 
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
@@ -32,6 +34,8 @@
 
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-hover: hsl(var(--accent-hover));
+  --color-accent-light: hsl(var(--accent-light));
 
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
@@ -39,6 +43,13 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
+
+  --color-success: hsl(var(--success));
+  --color-success-light: hsl(var(--success-light));
+  --color-warning: hsl(var(--warning));
+  --color-warning-light: hsl(var(--warning-light));
+  --color-info: hsl(var(--info));
+  --color-info-light: hsl(var(--info-light));
 
   --color-chart-1: hsl(var(--chart-1));
   --color-chart-2: hsl(var(--chart-2));
@@ -95,17 +106,27 @@
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
+    --primary-hover: 222.2 47.4% 20%;
+    --primary-light: 222.2 47.4% 95%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
+    --accent-hover: 210 40% 90%;
+    --accent-light: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
+    --success: 160 84% 39%;
+    --success-light: 160 84% 95%;
+    --warning: 43 96% 56%;
+    --warning-light: 43 96% 95%;
+    --info: 217 91% 60%;
+    --info-light: 217 91% 95%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -131,17 +152,27 @@
     --popover-foreground: 210 40% 98%;
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
+    --primary-hover: 210 40% 90%;
+    --primary-light: 210 40% 20%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
+    --accent-hover: 217.2 32.6% 25%;
+    --accent-light: 217.2 32.6% 10%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+    --success: 142 76% 36%;
+    --success-light: 142 50% 15%;
+    --warning: 38 92% 50%;
+    --warning-light: 38 50% 15%;
+    --info: 217 91% 60%;
+    --info-light: 217 50% 15%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -185,5 +216,25 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom utilities for dashboard components */
+@layer utilities {
+  .card-hover {
+    transition: all 0.2s ease-in-out;
+    @apply hover:shadow-md hover:-translate-y-1;
+  }
+
+  .shadow-primary {
+    box-shadow: 0 10px 30px -10px hsl(var(--primary) / 0.3);
+  }
+
+  .shadow-accent {
+    box-shadow: 0 10px 30px -10px hsl(var(--accent) / 0.3);
+  }
+
+  .bg-gradient-hero {
+    background: linear-gradient(135deg, hsl(var(--primary-light)) 0%, hsl(var(--background)) 100%);
   }
 }

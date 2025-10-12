@@ -37,11 +37,44 @@ export default function RootLayout({
                   orange: { light: { '--primary': '20.5 90.2% 48.2%', '--primary-foreground': '60 9.1% 97.8%' }, dark: { '--primary': '20.5 90.2% 48.2%', '--primary-foreground': '60 9.1% 97.8%' } },
                   red: { light: { '--primary': '0 72.2% 50.6%', '--primary-foreground': '0 85.7% 97.3%' }, dark: { '--primary': '0 72.2% 50.6%', '--primary-foreground': '0 85.7% 97.3%' } },
                   rose: { light: { '--primary': '346.8 77.2% 49.8%', '--primary-foreground': '355.7 100% 97.3%' }, dark: { '--primary': '346.8 77.2% 49.8%', '--primary-foreground': '355.7 100% 97.3%' } },
-                  violet: { light: { '--primary': '262.1 83.3% 57.8%', '--primary-foreground': '210 20% 98%' }, dark: { '--primary': '263.4 70% 50.4%', '--primary-foreground': '210 20% 98%' } },
+                  violet: {
+                    light: {
+                      '--primary': '262.1 83.3% 57.8%',
+                      '--primary-foreground': '210 20% 98%',
+                      '--primary-hover': '271 81% 56%',
+                      '--primary-light': '270 100% 96%',
+                      '--accent': '47 100% 60%',
+                      '--accent-foreground': '222 47% 11%',
+                      '--accent-hover': '43 96% 56%',
+                      '--accent-light': '270 100% 98%',
+                      '--success': '160 84% 39%',
+                      '--success-light': '160 84% 95%',
+                      '--warning': '43 96% 56%',
+                      '--warning-light': '43 96% 95%',
+                      '--info': '217 91% 60%',
+                      '--info-light': '217 91% 95%'
+                    },
+                    dark: {
+                      '--primary': '263.4 70% 50.4%',
+                      '--primary-foreground': '210 20% 98%',
+                      '--primary-hover': '258 85% 70%',
+                      '--primary-light': '258 50% 20%',
+                      '--accent': '47 100% 60%',
+                      '--accent-foreground': '240 10% 15%',
+                      '--accent-hover': '47 100% 55%',
+                      '--accent-light': '47 50% 20%',
+                      '--success': '142 76% 36%',
+                      '--success-light': '142 50% 15%',
+                      '--warning': '38 92% 50%',
+                      '--warning-light': '38 50% 15%',
+                      '--info': '217 91% 60%',
+                      '--info-light': '217 50% 15%'
+                    }
+                  },
                   yellow: { light: { '--primary': '47.9 95.8% 53.1%', '--primary-foreground': '26 83.3% 14.1%' }, dark: { '--primary': '47.9 95.8% 53.1%', '--primary-foreground': '26 83.3% 14.1%' } }
                 };
                 
-                const theme = (savedTheme && themeTokens[savedTheme]) ? savedTheme : 'default';
+                const theme = (savedTheme && themeTokens[savedTheme]) ? savedTheme : 'violet';
                 const tokens = themeTokens[theme];
                 
                 // Apply light tokens immediately
@@ -65,7 +98,7 @@ export default function RootLayout({
       <body className={`min-h-[100dvh] ${manrope.className}`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
