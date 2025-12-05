@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { customerPortalAction } from '@/lib/payments/actions';
+// import { customerPortalAction } from '@/lib/payments/actions'; // Commented out - Stripe not needed yet
 import { useActionState } from 'react';
 import { TeamDataWithMembers, User } from '@/lib/db/schema';
 import { removeTeamMember, inviteTeamMember } from '@/app/(login)/actions';
@@ -146,16 +146,14 @@ function QuickActions() {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 md:grid-cols-2">
-        <form action={customerPortalAction}>
-          <Button type="submit" variant="outline" className="w-full justify-start">
-            <CreditCard className="mr-2 h-4 w-4" />
-            Manage Subscription
-          </Button>
-        </form>
-        
-        <Button 
-          variant="outline" 
-          className="w-full justify-start" 
+        <Button variant="outline" className="w-full justify-start" disabled>
+          <CreditCard className="mr-2 h-4 w-4" />
+          Manage Subscription
+        </Button>
+
+        <Button
+          variant="outline"
+          className="w-full justify-start"
           disabled={!isOwner}
           onClick={() => {
             // This would typically open a modal or navigate to invite page

@@ -1,20 +1,21 @@
 'use server';
 
-import { redirect } from 'next/navigation';
-import { createCheckoutSession, createCustomerPortalSession } from './stripe';
-import { withTeam } from '@/lib/auth/middleware';
+// Commented out - Stripe not needed yet
+// import { redirect } from 'next/navigation';
+// import { createCheckoutSession, createCustomerPortalSession } from './stripe';
+// import { withTeam } from '@/lib/auth/middleware';
 
-export const checkoutAction = withTeam(async (formData, team) => {
-  const priceId = formData.get('priceId') as string;
-  
-  if (!priceId || priceId.trim() === '') {
-    throw new Error('Price ID is required for checkout');
-  }
-  
-  await createCheckoutSession({ team: team, priceId });
-});
+// export const checkoutAction = withTeam(async (formData, team) => {
+//   const priceId = formData.get('priceId') as string;
 
-export const customerPortalAction = withTeam(async (_, team) => {
-  const portalSession = await createCustomerPortalSession(team);
-  redirect(portalSession.url);
-});
+//   if (!priceId || priceId.trim() === '') {
+//     throw new Error('Price ID is required for checkout');
+//   }
+
+//   await createCheckoutSession({ team: team, priceId });
+// });
+
+// export const customerPortalAction = withTeam(async (_, team) => {
+//   const portalSession = await createCustomerPortalSession(team);
+//   redirect(portalSession.url);
+// });
