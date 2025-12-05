@@ -4,6 +4,8 @@ This is a starter template for building a SaaS application using **Next.js** wit
 
 **Demo: [https://next-saas-start.vercel.app/](https://next-saas-start.vercel.app/)**
 
+> **Note**: Stripe integration is currently disabled in this project. See [DISABLING_REENABLING_STRIPE.md](./DISABLING_REENABLING_STRIPE.md) for instructions on re-enabling it.
+
 ## Features
 
 - Marketing landing page (`/`) with animated Terminal element
