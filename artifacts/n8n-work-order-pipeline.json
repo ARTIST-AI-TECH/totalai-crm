@@ -1,0 +1,394 @@
+{
+  "name": "Plumbing Work Order Intake Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute",
+              "minute": 5
+            }
+          ]
+        },
+        "filters": {
+          "folderId": "inbox",
+          "isRead": false,
+          "hasAttachments": "any",
+          "subject": "New Work Order",
+          "sender": ""
+        },
+        "options": {
+          "downloadAttachments": false
+        }
+      },
+      "id": "outlook-trigger",
+      "name": "Poll Outlook for Work Orders",
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "YOUR_OUTLOOK_CREDENTIAL_ID",
+          "name": "Microsoft Outlook OAuth2"
+        }
+      },
+      "notes": "Polls every 5 minutes for unread emails with 'New Work Order' in subject. Update the subject filter to match your marketplace emails."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract URL from email body\nconst emailBody = $input.first().json.body?.content || $input.first().json.bodyPreview || '';\nconst sender = $input.first().json.from?.emailAddress?.address || '';\nconst senderName = $input.first().json.from?.emailAddress?.name || '';\nconst subject = $input.first().json.subject || '';\nconst receivedAt = $input.first().json.receivedDateTime || new Date().toISOString();\nconst emailId = $input.first().json.id || '';\n\n// Regex patterns to find URLs in email\nconst urlPatterns = [\n  /https?:\\/\\/[^\\s<>\"']+/gi,\n  /href=[\"'](https?:\\/\\/[^\"']+)[\"']/gi\n];\n\nlet extractedUrls = [];\n\n// Extract all URLs\nfor (const pattern of urlPatterns) {\n  const matches = emailBody.match(pattern);\n  if (matches) {\n    for (const match of matches) {\n      // Clean up href= wrapper if present\n      const cleanUrl = match.replace(/href=[\"']/i, '').replace(/[\"']$/, '');\n      if (!extractedUrls.includes(cleanUrl)) {\n        extractedUrls.push(cleanUrl);\n      }\n    }\n  }\n}\n\n// Filter for work order URLs (customize this pattern for your marketplace)\nconst workOrderUrls = extractedUrls.filter(url => {\n  return url.includes('workorder') || \n         url.includes('job') || \n         url.includes('request') ||\n         url.includes('order') ||\n         url.includes('service');\n});\n\n// Use first work order URL found, or first URL if no specific match\nconst targetUrl = workOrderUrls[0] || extractedUrls[0] || null;\n\nif (!targetUrl) {\n  throw new Error('No URL found in email body');\n}\n\nreturn {\n  json: {\n    emailId,\n    targetUrl,\n    allUrls: extractedUrls,\n    sender,\n    senderName,\n    subject,\n    receivedAt,\n    rawBody: emailBody.substring(0, 500) // First 500 chars for reference\n  }\n};"
+      },
+      "id": "extract-url",
+      "name": "Extract URL from Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "notes": "Parses email body to find URLs. Prioritizes URLs containing 'workorder', 'job', 'request', etc."
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.targetUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "fetch-page",
+      "name": "Fetch Work Order Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "notes": "Fetches the HTML content of the work order page"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the scraped HTML to extract work order details\nconst html = $input.first().json.data || $input.first().json.body || '';\nconst emailData = $('Extract URL from Email').first().json;\n\n// Helper function to extract text between patterns\nfunction extractBetween(text, startPattern, endPattern) {\n  const startRegex = new RegExp(startPattern, 'i');\n  const startMatch = text.match(startRegex);\n  if (!startMatch) return null;\n  \n  const startIndex = startMatch.index + startMatch[0].length;\n  const remaining = text.substring(startIndex);\n  \n  if (endPattern) {\n    const endRegex = new RegExp(endPattern, 'i');\n    const endMatch = remaining.match(endRegex);\n    if (endMatch) {\n      return remaining.substring(0, endMatch.index).trim();\n    }\n  }\n  return remaining.substring(0, 200).trim();\n}\n\n// Helper to clean HTML tags\nfunction stripHtml(text) {\n  return text.replace(/<[^>]*>/g, ' ').replace(/\\s+/g, ' ').trim();\n}\n\n// Helper to extract by label pattern\nfunction extractByLabel(html, label) {\n  const patterns = [\n    new RegExp(`${label}[:\\\\s]*<[^>]*>([^<]+)`, 'i'),\n    new RegExp(`${label}[:\\\\s]*([^<\\\\n]+)`, 'i'),\n    new RegExp(`<[^>]*>${label}[:\\\\s]*</[^>]*>\\\\s*<[^>]*>([^<]+)`, 'i'),\n    new RegExp(`\"${label.toLowerCase()}\"[:\\\\s]*\"([^\"]+)\"`, 'i')\n  ];\n  \n  for (const pattern of patterns) {\n    const match = html.match(pattern);\n    if (match && match[1]) {\n      return stripHtml(match[1]).trim();\n    }\n  }\n  return null;\n}\n\n// Extract common work order fields\n// Customize these patterns based on your specific marketplace HTML structure\n\nconst customerName = \n  extractByLabel(html, 'Customer') ||\n  extractByLabel(html, 'Client') ||\n  extractByLabel(html, 'Name') ||\n  extractByLabel(html, 'Contact') ||\n  'Unknown Customer';\n\nconst address = \n  extractByLabel(html, 'Address') ||\n  extractByLabel(html, 'Location') ||\n  extractByLabel(html, 'Service Address') ||\n  extractByLabel(html, 'Property') ||\n  '';\n\nconst phone = \n  extractByLabel(html, 'Phone') ||\n  extractByLabel(html, 'Tel') ||\n  extractByLabel(html, 'Mobile') ||\n  extractByLabel(html, 'Contact Number') ||\n  // Also try regex for phone patterns\n  (html.match(/\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}/) || [''])[0] ||\n  '';\n\nconst email = \n  extractByLabel(html, 'Email') ||\n  extractByLabel(html, 'E-mail') ||\n  // Regex for email\n  (html.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/) || [''])[0] ||\n  emailData.sender;\n\nconst issue = \n  extractByLabel(html, 'Description') ||\n  extractByLabel(html, 'Issue') ||\n  extractByLabel(html, 'Problem') ||\n  extractByLabel(html, 'Service Needed') ||\n  extractByLabel(html, 'Work Description') ||\n  extractByLabel(html, 'Details') ||\n  'No description provided';\n\nconst workOrderId = \n  extractByLabel(html, 'Work Order') ||\n  extractByLabel(html, 'Order ID') ||\n  extractByLabel(html, 'Reference') ||\n  extractByLabel(html, 'Ticket') ||\n  extractByLabel(html, 'Job Number') ||\n  `WO-${Date.now()}`;\n\nconst scheduledDate = \n  extractByLabel(html, 'Scheduled') ||\n  extractByLabel(html, 'Date') ||\n  extractByLabel(html, 'Appointment') ||\n  extractByLabel(html, 'Service Date') ||\n  null;\n\nconst priority = \n  extractByLabel(html, 'Priority') ||\n  extractByLabel(html, 'Urgency') ||\n  'medium';\n\nconst estimatedValue = \n  extractByLabel(html, 'Budget') ||\n  extractByLabel(html, 'Estimate') ||\n  extractByLabel(html, 'Value') ||\n  extractByLabel(html, 'Amount') ||\n  null;\n\n// Determine priority level\nlet priorityLevel = 'medium';\nconst priorityLower = priority.toLowerCase();\nconst issueLower = issue.toLowerCase();\n\nif (priorityLower.includes('urgent') || priorityLower.includes('emergency') || \n    issueLower.includes('flood') || issueLower.includes('sewage') || \n    issueLower.includes('burst') || issueLower.includes('no water')) {\n  priorityLevel = 'urgent';\n} else if (priorityLower.includes('high') || issueLower.includes('leak') || \n           issueLower.includes('backup')) {\n  priorityLevel = 'high';\n} else if (priorityLower.includes('low') || issueLower.includes('running') || \n           issueLower.includes('drip')) {\n  priorityLevel = 'low';\n}\n\n// Parse estimated value to number\nlet estimatedAmount = 200; // Default\nif (estimatedValue) {\n  const numMatch = estimatedValue.match(/[\\d,]+\\.?\\d*/);\n  if (numMatch) {\n    estimatedAmount = parseFloat(numMatch[0].replace(/,/g, ''));\n  }\n}\n\n// Generate unique ID\nconst uniqueId = `WO-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;\n\nreturn {\n  json: {\n    // Work order data for CRM\n    workOrder: {\n      id: uniqueId,\n      externalId: workOrderId,\n      customer: customerName,\n      address: address,\n      phone: phone,\n      email: email,\n      issue: issue,\n      priority: priorityLevel,\n      status: 'new',\n      source: 'Email Scrape',\n      sourceUrl: emailData.targetUrl,\n      receivedAt: emailData.receivedAt,\n      scheduledFor: scheduledDate,\n      estimatedValue: estimatedAmount,\n      notes: `Scraped from marketplace. Original email from: ${emailData.senderName} <${emailData.sender}>`\n    },\n    // Preserve email data for later steps\n    emailData: emailData,\n    // Raw extraction for debugging\n    debug: {\n      htmlLength: html.length,\n      extractedFields: {\n        customerName,\n        address,\n        phone,\n        email,\n        issue,\n        workOrderId,\n        priority,\n        estimatedValue\n      }\n    }\n  }\n};"
+      },
+      "id": "parse-html",
+      "name": "Parse & Extract Work Order Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "notes": "Extracts structured work order data from HTML. Customize the extractByLabel patterns to match your specific marketplace's HTML structure."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-marketplace-api.com/api/v1/work-orders/accept",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"action\": \"accept\",\n  \"work_order_id\": \"{{ $json.workOrder.externalId }}\",\n  \"contractor\": {\n    \"company_name\": \"Your Plumbing Company\",\n    \"contractor_id\": \"YOUR_CONTRACTOR_ID\",\n    \"license_number\": \"YOUR_LICENSE_NUMBER\"\n  },\n  \"acceptance_details\": {\n    \"accepted_at\": \"{{ $now.toISO() }}\",\n    \"estimated_arrival\": \"{{ $now.plus({ hours: 2 }).toISO() }}\",\n    \"estimated_completion\": \"{{ $now.plus({ hours: 4 }).toISO() }}\",\n    \"quoted_amount\": {{ $json.workOrder.estimatedValue }},\n    \"notes\": \"Work order accepted via automated system\"\n  },\n  \"contact\": {\n    \"dispatcher_name\": \"Dispatch System\",\n    \"dispatcher_phone\": \"(512) 555-0100\",\n    \"dispatcher_email\": \"dispatch@yourplumbing.com\"\n  }\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "accept-marketplace",
+      "name": "Accept Work Order on Marketplace",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 180],
+      "notes": "Sends acceptance to marketplace API. Update the URL, contractor details, and schema to match your marketplace's API requirements."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-crm-domain.com/webhook/work-orders",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Webhook-Source",
+              "value": "n8n-email-scraper"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.workOrder) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "send-to-crm",
+      "name": "Send to CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 300],
+      "notes": "Sends the parsed work order to your FlowControl CRM webhook endpoint"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Parse & Extract Work Order Data').item.json.workOrder.email }}",
+        "subject": "Work Order Accepted - {{ $('Parse & Extract Work Order Data').item.json.workOrder.id }}",
+        "message": "=<html>\n<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333;\">\n  <div style=\"max-width: 600px; margin: 0 auto; padding: 20px;\">\n    \n    <div style=\"background: linear-gradient(135deg, #d97706 0%, #b45309 100%); padding: 20px; border-radius: 10px 10px 0 0;\">\n      <h1 style=\"color: white; margin: 0; font-size: 24px;\">✅ Work Order Accepted</h1>\n    </div>\n    \n    <div style=\"background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; border-top: none;\">\n      \n      <p>Dear <strong>{{ $('Parse & Extract Work Order Data').item.json.workOrder.customer }}</strong>,</p>\n      \n      <p>Great news! Your service request has been accepted and a technician will be dispatched shortly.</p>\n      \n      <div style=\"background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 20px 0;\">\n        <h3 style=\"color: #d97706; margin-top: 0;\">Work Order Details</h3>\n        <table style=\"width: 100%; border-collapse: collapse;\">\n          <tr>\n            <td style=\"padding: 8px 0; border-bottom: 1px solid #f3f4f6;\"><strong>Reference #:</strong></td>\n            <td style=\"padding: 8px 0; border-bottom: 1px solid #f3f4f6;\">{{ $('Parse & Extract Work Order Data').item.json.workOrder.id }}</td>\n          </tr>\n          <tr>\n            <td style=\"padding: 8px 0; border-bottom: 1px solid #f3f4f6;\"><strong>Service Address:</strong></td>\n            <td style=\"padding: 8px 0; border-bottom: 1px solid #f3f4f6;\">{{ $('Parse & Extract Work Order Data').item.json.workOrder.address }}</td>\n          </tr>\n          <tr>\n            <td style=\"padding: 8px 0; border-bottom: 1px solid #f3f4f6;\"><strong>Issue:</strong></td>\n            <td style=\"padding: 8px 0; border-bottom: 1px solid #f3f4f6;\">{{ $('Parse & Extract Work Order Data').item.json.workOrder.issue }}</td>\n          </tr>\n          <tr>\n            <td style=\"padding: 8px 0; border-bottom: 1px solid #f3f4f6;\"><strong>Priority:</strong></td>\n            <td style=\"padding: 8px 0; border-bottom: 1px solid #f3f4f6;\">{{ $('Parse & Extract Work Order Data').item.json.workOrder.priority.toUpperCase() }}</td>\n          </tr>\n          <tr>\n            <td style=\"padding: 8px 0;\"><strong>Estimated Cost:</strong></td>\n            <td style=\"padding: 8px 0;\">${{ $('Parse & Extract Work Order Data').item.json.workOrder.estimatedValue }}</td>\n          </tr>\n        </table>\n      </div>\n      \n      <div style=\"background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin: 20px 0;\">\n        <h4 style=\"color: #b45309; margin-top: 0;\">📞 What Happens Next?</h4>\n        <ol style=\"margin-bottom: 0; padding-left: 20px;\">\n          <li>Our dispatcher will contact you within 30 minutes to confirm the appointment time</li>\n          <li>You'll receive a text message when the technician is on the way</li>\n          <li>The technician will call upon arrival</li>\n        </ol>\n      </div>\n      \n      <div style=\"background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 16px; margin: 20px 0;\">\n        <h4 style=\"color: #0369a1; margin-top: 0;\">📍 Contact Information</h4>\n        <p style=\"margin: 0;\"><strong>Your Plumbing Company</strong><br>\n        Phone: (512) 555-0100<br>\n        Email: dispatch@yourplumbing.com<br>\n        Emergency Line: (512) 555-0911</p>\n      </div>\n      \n      <p>Thank you for choosing us for your plumbing needs!</p>\n      \n      <p>Best regards,<br>\n      <strong>The Your Plumbing Company Team</strong></p>\n      \n    </div>\n    \n    <div style=\"background: #1f2937; color: #9ca3af; padding: 16px; border-radius: 0 0 10px 10px; font-size: 12px; text-align: center;\">\n      <p style=\"margin: 0;\">This is an automated confirmation. Please do not reply to this email.</p>\n      <p style=\"margin: 8px 0 0 0;\">© 2024 Your Plumbing Company | Licensed & Insured</p>\n    </div>\n    \n  </div>\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "send-confirmation-email",
+      "name": "Send Client Confirmation Email",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [1120, 420],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "YOUR_OUTLOOK_CREDENTIAL_ID",
+          "name": "Microsoft Outlook OAuth2"
+        }
+      },
+      "notes": "Sends a professional confirmation email to the client. Customize the company name, contact info, and branding."
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "update",
+        "messageId": "={{ $('Extract URL from Email').item.json.emailId }}",
+        "updateFields": {
+          "isRead": true
+        }
+      },
+      "id": "mark-email-read",
+      "name": "Mark Original Email as Read",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [1340, 300],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "YOUR_OUTLOOK_CREDENTIAL_ID",
+          "name": "Microsoft Outlook OAuth2"
+        }
+      },
+      "notes": "Marks the original marketplace email as read to prevent reprocessing"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-url-exists",
+              "leftValue": "={{ $json.targetUrl }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-url-found",
+      "name": "URL Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 480],
+      "notes": "Checks if a valid URL was extracted from the email"
+    },
+    {
+      "parameters": {
+        "sendTo": "dispatch@yourplumbing.com",
+        "subject": "⚠️ Work Order Email Processing Failed",
+        "message": "=<html>\n<body style=\"font-family: Arial, sans-serif;\">\n  <h2 style=\"color: #dc2626;\">⚠️ Failed to Process Work Order Email</h2>\n  <p>The following email could not be processed because no valid URL was found:</p>\n  <div style=\"background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;\">\n    <p><strong>From:</strong> {{ $('Extract URL from Email').item.json.senderName }} &lt;{{ $('Extract URL from Email').item.json.sender }}&gt;</p>\n    <p><strong>Subject:</strong> {{ $('Extract URL from Email').item.json.subject }}</p>\n    <p><strong>Received:</strong> {{ $('Extract URL from Email').item.json.receivedAt }}</p>\n    <p><strong>Preview:</strong> {{ $('Extract URL from Email').item.json.rawBody }}</p>\n  </div>\n  <p>Please review this email manually in your inbox.</p>\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "notify-failure",
+      "name": "Notify Team of Failure",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [680, 560],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "YOUR_OUTLOOK_CREDENTIAL_ID",
+          "name": "Microsoft Outlook OAuth2"
+        }
+      },
+      "notes": "Sends alert to dispatch team when an email can't be processed"
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $json.error || 'Unknown error occurred' }}"
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [1340, 560],
+      "notes": "Catches and logs errors for troubleshooting"
+    },
+    {
+      "parameters": {
+        "content": "## 🔧 Plumbing Work Order Intake Pipeline\n\n### How This Workflow Works:\n\n1. **Poll Outlook** - Checks for new unread emails with \"New Work Order\" in subject every 5 minutes\n\n2. **Extract URL** - Parses email body to find the marketplace work order link\n\n3. **Fetch Page** - Downloads the HTML content from the work order URL\n\n4. **Parse Data** - Extracts structured data (customer, address, phone, issue, etc.) from HTML\n\n5. **Three Parallel Actions:**\n   - Accept on Marketplace API\n   - Send to CRM webhook\n   - Email confirmation to client\n\n6. **Mark as Read** - Prevents reprocessing\n\n---\n\n### ⚙️ Configuration Required:\n\n1. **Microsoft Outlook OAuth2 Credentials** - Connect your Outlook account\n\n2. **Update Email Subject Filter** - Match your marketplace's email subject line\n\n3. **Customize HTML Parsing** - Modify extraction patterns in \"Parse & Extract\" node\n\n4. **Marketplace API** - Update URL and schema in \"Accept Work Order\" node\n\n5. **CRM Webhook URL** - Point to your FlowControl CRM instance\n\n6. **Company Details** - Update branding in confirmation email",
+        "height": 520,
+        "width": 340,
+        "color": 4
+      },
+      "id": "sticky-note-main",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-80, 160]
+    },
+    {
+      "parameters": {
+        "content": "## 📧 Marketplace API Schema\n\nUpdate the JSON body in \"Accept Work Order\" node to match your specific marketplace's API requirements.\n\nCommon fields:\n- `work_order_id`\n- `contractor_id`\n- `acceptance_timestamp`\n- `estimated_arrival`\n- `quoted_amount`",
+        "height": 240,
+        "width": 260,
+        "color": 6
+      },
+      "id": "sticky-note-api",
+      "name": "Sticky Note API",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1100, -80]
+    }
+  ],
+  "connections": {
+    "Poll Outlook for Work Orders": {
+      "main": [
+        [
+          {
+            "node": "Extract URL from Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract URL from Email": {
+      "main": [
+        [
+          {
+            "node": "Check URL Found?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Work Order Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check URL Found?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Notify Team of Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Work Order Page": {
+      "main": [
+        [
+          {
+            "node": "Parse & Extract Work Order Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Extract Work Order Data": {
+      "main": [
+        [
+          {
+            "node": "Accept Work Order on Marketplace",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send to CRM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Client Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accept Work Order on Marketplace": {
+      "main": [
+        [
+          {
+            "node": "Mark Original Email as Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to CRM": {
+      "main": [
+        []
+      ]
+    },
+    "Send Client Confirmation Email": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "plumbing",
+      "createdAt": "2024-12-01T00:00:00.000Z",
+      "updatedAt": "2024-12-01T00:00:00.000Z"
+    },
+    {
+      "name": "work-orders",
+      "createdAt": "2024-12-01T00:00:00.000Z",
+      "updatedAt": "2024-12-01T00:00:00.000Z"
+    },
+    {
+      "name": "email-automation",
+      "createdAt": "2024-12-01T00:00:00.000Z",
+      "updatedAt": "2024-12-01T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "pinData": {}
+}
