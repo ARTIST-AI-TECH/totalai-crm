@@ -1,21 +1,26 @@
 import './styles.css';
 import type { Metadata, Viewport } from 'next';
-import { Manrope } from 'next/font/google';
+import { Manrope, IBM_Plex_Mono } from 'next/font/google';
 import { getUser, getTeamForUser } from '@/lib/db/queries';
 import { SWRConfig } from 'swr';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ColorThemeProvider } from '@/lib/theme-context';
 
 export const metadata: Metadata = {
-  title: 'Next.js SaaS Starter',
-  description: 'Get started quickly with Next.js, Postgres, and Stripe.'
+  title: 'FlowControl CRM',
+  description: 'Plumbing CRM for managing work orders, scheduling, and invoicing.'
 };
 
 export const viewport: Viewport = {
   maximumScale: 1
 };
 
-const manrope = Manrope({ subsets: ['latin'] });
+const manrope = Manrope({ subsets: ['latin'], variable: '--font-sans' });
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '600'],
+  variable: '--font-mono'
+});
 
 export default function RootLayout({
   children
@@ -62,7 +67,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`min-h-[100dvh] ${manrope.className}`}>
+      <body className={`min-h-[100dvh] ${manrope.variable} ${ibmPlexMono.variable}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
