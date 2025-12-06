@@ -28,7 +28,7 @@ export function RouteList({ orders, onOrderClick }: RouteListProps) {
         {orders.map((order, index) => (
           <div
             key={order.id}
-            className="flex gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
+            className="flex gap-3 p-3 border hover:bg-muted/50 cursor-pointer transition-colors"
             onClick={() => onOrderClick?.(order)}
           >
             <div className="flex-shrink-0">
