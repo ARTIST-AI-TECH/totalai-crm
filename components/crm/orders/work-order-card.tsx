@@ -5,16 +5,11 @@ import { cn } from '@/lib/utils';
 /**
  * Work Order Card Component (Outlook-style)
  *
- * Clean, minimal inbox-style row for work orders.
- * Simple design familiar to Microsoft users.
+ * Minimal inbox row - unread items have blue accent, read items are gray.
+ * Single accent color like Outlook/Gmail.
  */
 export function WorkOrderCard({ order, isSelected, onClick }: WorkOrderCardProps) {
-  const priorityIndicator = {
-    urgent: 'bg-red-600',
-    high: 'bg-orange-500',
-    medium: 'bg-blue-500',
-    low: 'bg-gray-400',
-  };
+  const isUnread = !order.isRead;
 
   const statusText = {
     new: 'New',
@@ -26,21 +21,27 @@ export function WorkOrderCard({ order, isSelected, onClick }: WorkOrderCardProps
   return (
     <div
       className={cn(
-        'relative border-b border-border p-4 cursor-pointer transition-colors hover:bg-muted/50',
-        isSelected && 'bg-muted/70 border-l-4 border-l-primary'
+        'relative border-b border-border p-4 cursor-pointer transition-colors',
+        isUnread && !isSelected && 'bg-blue-50/50 dark:bg-blue-950/20',
+        !isUnread && 'hover:bg-muted/30',
+        isSelected && 'bg-blue-100 dark:bg-blue-950/40 border-l-4 border-l-blue-600'
       )}
       onClick={onClick}
     >
-      {/* Priority indicator dot */}
-      <div className="absolute left-2 top-1/2 -translate-y-1/2">
-        <div className={cn('w-2 h-2', priorityIndicator[order.priority])} />
-      </div>
+      {/* Unread indicator */}
+      {isUnread && (
+        <div className="absolute left-2 top-1/2 -translate-y-1/2">
+          <div className="w-2 h-2 bg-blue-600" />
+        </div>
+      )}
 
-      <div className="pl-3">
+      <div className={cn('pl-3', isUnread && 'pl-5')}>
         {/* Header row */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm">{order.customer}</span>
+            <span className={cn('text-sm', isUnread ? 'font-bold' : 'font-medium')}>
+              {order.customer}
+            </span>
             <span className="text-xs text-muted-foreground">•</span>
             <span className="font-mono text-xs text-muted-foreground">{order.id}</span>
           </div>
@@ -48,7 +49,9 @@ export function WorkOrderCard({ order, isSelected, onClick }: WorkOrderCardProps
         </div>
 
         {/* Issue/Subject */}
-        <p className="text-sm mb-2 line-clamp-1">{order.issue}</p>
+        <p className={cn('text-sm mb-2 line-clamp-1', isUnread && 'font-semibold')}>
+          {order.issue}
+        </p>
 
         {/* Meta info row */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -63,7 +66,9 @@ export function WorkOrderCard({ order, isSelected, onClick }: WorkOrderCardProps
             <span>•</span>
             <span>{order.address.split(',')[0]}</span>
           </div>
-          <span className="font-semibold text-foreground">{formatCurrency(order.estimatedValue)}</span>
+          <span className={cn('text-foreground', isUnread && 'font-semibold')}>
+            {formatCurrency(order.estimatedValue)}
+          </span>
         </div>
       </div>
     </div>

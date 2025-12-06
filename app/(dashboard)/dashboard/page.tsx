@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { OrderStats } from '@/components/crm/orders/order-stats';
 import { OrderFilters } from '@/components/crm/orders/order-filters';
 import { WorkOrderList } from '@/components/crm/orders/work-order-list';
 import { WorkOrderDetail } from '@/components/crm/orders/work-order-detail';
@@ -47,6 +46,17 @@ export default function WorkOrdersPage() {
     new: newCount,
     in_progress: inProgressCount,
     completed: workOrders.filter((o) => o.status === 'completed').length,
+  };
+
+  // Mark as read when selected
+  const handleSelectOrder = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    // Mark as read
+    setWorkOrders((orders) =>
+      orders.map((order) =>
+        order.id === orderId ? { ...order, isRead: true } : order
+      )
+    );
   };
 
   // Action handlers
@@ -189,15 +199,6 @@ export default function WorkOrdersPage() {
 
   return (
     <div className="space-y-6 py-6">
-      {/* Stats */}
-      <OrderStats
-        newCount={newCount}
-        inProgressCount={inProgressCount}
-        completedCount={completedCount}
-        todayRevenue={todayRevenue}
-        pipelineValue={pipelineValue}
-      />
-
       {/* Filters */}
       <OrderFilters
         activeFilter={activeFilter}
@@ -211,7 +212,7 @@ export default function WorkOrdersPage() {
           <WorkOrderList
             orders={workOrders}
             selectedOrderId={selectedOrderId}
-            onSelectOrder={setSelectedOrderId}
+            onSelectOrder={handleSelectOrder}
             activeFilter={activeFilter}
           />
         </div>

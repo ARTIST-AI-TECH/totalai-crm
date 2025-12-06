@@ -31,7 +31,8 @@ export const initialWorkOrders: WorkOrder[] = [
     receivedAt: '2024-12-04T09:23:00',
     scheduledFor: null,
     estimatedValue: 185,
-    notes: 'Customer mentioned possible water damage to cabinet floor'
+    notes: 'Customer mentioned possible water damage to cabinet floor',
+    isRead: false
   },
   {
     id: 'WO-2024-002',
@@ -84,7 +85,8 @@ export const initialWorkOrders: WorkOrder[] = [
     receivedAt: '2024-12-04T10:02:00',
     scheduledFor: null,
     estimatedValue: 650,
-    notes: 'URGENT - sewage smell reported, potential health hazard'
+    notes: 'URGENT - sewage smell reported, potential health hazard',
+    isRead: false
   },
   {
     id: 'WO-2024-005',
