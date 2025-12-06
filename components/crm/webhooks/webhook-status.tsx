@@ -48,7 +48,7 @@ export function WebhookStatus({ status, lastPing }: WebhookStatusProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-3">
-          <div className={`p-3 rounded-lg ${config.bgColor}`}>
+          <div className={`p-3 ${config.bgColor}`}>
             <Icon className={`h-6 w-6 ${config.color}`} />
           </div>
           <div className="flex-1">
@@ -66,7 +66,7 @@ export function WebhookStatus({ status, lastPing }: WebhookStatusProps) {
           </div>
         </div>
 
-        <div className="bg-muted/50 p-3 rounded-md">
+        <div className="bg-muted/50 p-3">
           <p className="text-xs font-mono text-muted-foreground break-all">
             https://your-n8n-instance.com/webhook/work-orders
           </p>

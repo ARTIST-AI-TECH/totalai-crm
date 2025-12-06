@@ -66,9 +66,9 @@ export default function WebhooksPage() {
               return (
                 <div
                   key={index}
-                  className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                  className="flex items-start gap-3 p-3 border hover:bg-muted/50 transition-colors"
                 >
-                  <div className={`p-2 rounded-lg ${colorClass}`}>
+                  <div className={`p-2 ${colorClass}`}>
                     <Icon className="h-4 w-4" />
                   </div>
 

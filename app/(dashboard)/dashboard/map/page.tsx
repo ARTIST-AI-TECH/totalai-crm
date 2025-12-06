@@ -46,7 +46,7 @@ export default function MapPage() {
       </div>
 
       {selectedOrder && (
-        <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 rounded-lg">
+        <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900">
           <p className="text-sm font-semibold text-orange-900 dark:text-orange-100">
             Selected: {selectedOrder.id} - {selectedOrder.customer}
           </p>

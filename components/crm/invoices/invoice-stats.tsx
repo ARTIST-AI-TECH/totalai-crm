@@ -62,7 +62,7 @@ export function InvoiceStats({
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.title} Invoices
               </CardTitle>
-              <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+              <div className={`p-2 ${stat.bgColor}`}>
                 <Icon className={`h-4 w-4 ${stat.color}`} />
               </div>
             </CardHeader>

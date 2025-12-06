@@ -162,7 +162,7 @@ export function WorkOrderDetail({
 
         {/* Notes */}
         {order.notes && (
-          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-3 rounded-md">
+          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-3">
             <div className="flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
               <div>
@@ -209,7 +209,7 @@ export function WorkOrderDetail({
                 <User className="h-4 w-4" />
                 <span>Assigned Technician</span>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
+              <div className="flex items-center gap-3 p-3 bg-muted">
                 <Avatar>
                   <AvatarFallback className="bg-blue-600 text-white">
                     {getTechnicianInitials(order.assignedTo)}
