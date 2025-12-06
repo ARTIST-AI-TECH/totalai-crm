@@ -77,11 +77,11 @@ export function CRMSidebar({
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border px-4 py-6">
         <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 bg-gradient-to-br from-orange-600 to-orange-800 flex items-center justify-center shadow-lg">
-            <Droplet className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 bg-primary flex items-center justify-center shadow-lg">
+            <Droplet className="w-6 h-6 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="text-lg font-bold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
+            <h2 className="text-lg font-bold text-primary">
               FlowControl
             </h2>
             <p className="text-xs text-muted-foreground">Plumbing CRM</p>
@@ -103,7 +103,7 @@ export function CRMSidebar({
                   isActive={isActive}
                   className={cn(
                     'group relative',
-                    isActive && 'bg-orange-600/10 text-orange-600 hover:bg-orange-600/20'
+                    isActive && 'bg-primary/10 text-primary hover:bg-primary/20'
                   )}
                 >
                   <Link href={item.href}>

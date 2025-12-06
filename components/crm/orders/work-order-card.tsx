@@ -22,16 +22,16 @@ export function WorkOrderCard({ order, isSelected, onClick }: WorkOrderCardProps
     <div
       className={cn(
         'relative border-b border-border p-4 cursor-pointer transition-colors',
-        isUnread && !isSelected && 'bg-blue-50/50 dark:bg-blue-950/20',
+        isUnread && !isSelected && 'bg-primary/5',
         !isUnread && 'hover:bg-muted/30',
-        isSelected && 'bg-blue-100 dark:bg-blue-950/40 border-l-4 border-l-blue-600'
+        isSelected && 'bg-primary/10 border-l-4 border-l-primary'
       )}
       onClick={onClick}
     >
       {/* Unread indicator */}
       {isUnread && (
         <div className="absolute left-2 top-1/2 -translate-y-1/2">
-          <div className="w-2 h-2 bg-blue-600" />
+          <div className="w-2 h-2 bg-primary" />
         </div>
       )}
 
