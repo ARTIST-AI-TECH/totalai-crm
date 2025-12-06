@@ -51,7 +51,7 @@ export function TechScheduleCard({ technician, assignedJobs }: TechScheduleCardP
             {assignedJobs.map((job) => (
               <div
                 key={job.id}
-                className="p-3 rounded-lg border bg-muted/50 hover:bg-muted transition-colors"
+                className="p-3 border bg-muted/50 hover:bg-muted transition-colors"
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">

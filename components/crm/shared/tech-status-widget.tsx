@@ -35,7 +35,7 @@ export function TechStatusWidget({ technicians, className }: TechStatusWidgetPro
         {technicians.map((tech) => (
           <div
             key={tech.id}
-            className="flex items-center gap-3 px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors"
+            className="flex items-center gap-3 px-2 py-1.5 hover:bg-muted/50 transition-colors"
           >
             <Avatar className="h-8 w-8" style={{ borderColor: tech.color, borderWidth: 2 }}>
               <AvatarFallback
