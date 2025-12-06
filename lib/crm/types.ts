@@ -46,6 +46,7 @@ export interface WorkOrder {
   actualValue?: number;
   notes?: string;
   invoice?: Invoice;
+  isRead?: boolean; // Outlook-style read/unread state
 }
 
 export interface Technician {
