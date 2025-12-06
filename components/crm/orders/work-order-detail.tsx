@@ -48,13 +48,7 @@ export function WorkOrderDetail({
   onMarkPaid
 }: WorkOrderDetailProps) {
   if (!order) {
-    return (
-      <Card className="lg:sticky lg:top-4 h-fit">
-        <CardContent className="flex items-center justify-center h-64 text-muted-foreground">
-          <p>Select a work order to view details</p>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   // Determine which actions to show based on status
@@ -68,7 +62,7 @@ export function WorkOrderDetail({
   const invoiceTotal = order.invoice ? calculateInvoiceTotal(order.invoice.items) : 0;
 
   return (
-    <Card className="lg:sticky lg:top-4 h-fit max-h-[calc(100vh-100px)] overflow-auto">
+    <Card className="h-fit min-h-[600px]">
       <CardHeader className="border-b">
         <div className="flex items-start justify-between">
           <div className="flex-1">
