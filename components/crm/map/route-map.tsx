@@ -38,7 +38,7 @@ export function RouteMap({ orders, onMarkerClick }: RouteMapProps) {
       </div>
 
       {/* Priority legend */}
-      <div className="absolute top-4 right-4 bg-card/95 backdrop-blur p-3 rounded-lg border z-10">
+      <div className="absolute top-4 right-4 bg-card/95 backdrop-blur p-3 border z-10">
         <h4 className="font-semibold text-xs mb-2">Priority</h4>
         <div className="space-y-1 text-xs">
           <div className="flex items-center gap-2">

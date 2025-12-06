@@ -40,7 +40,7 @@ export function NotificationToast({ type, message, onDismiss }: NotificationProp
         <span className="flex-1 text-sm font-medium">{message}</span>
         <button
           onClick={onDismiss}
-          className="absolute right-3 top-3 rounded-sm opacity-70 hover:opacity-100 transition-opacity"
+          className="absolute right-3 top-3 opacity-70 hover:opacity-100 transition-opacity"
           aria-label="Close notification"
         >
           <X className="h-4 w-4" />
