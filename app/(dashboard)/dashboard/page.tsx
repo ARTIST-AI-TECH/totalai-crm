@@ -20,7 +20,10 @@ import {
 
 export default function WorkOrdersPage() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>(initialWorkOrders);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  // Select first order by default (inbox-style)
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(
+    initialWorkOrders.length > 0 ? initialWorkOrders[0].id : null
+  );
   const [activeFilter, setActiveFilter] = useState('all');
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -202,9 +205,9 @@ export default function WorkOrdersPage() {
         counts={filterCounts}
       />
 
-      {/* Two-column layout: List + Detail */}
+      {/* Inbox-style layout: List (1/3) + Detail (2/3) */}
       <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-1">
           <WorkOrderList
             orders={workOrders}
             selectedOrderId={selectedOrderId}
@@ -213,7 +216,7 @@ export default function WorkOrdersPage() {
           />
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-2">
           <WorkOrderDetail
             order={selectedOrder}
             onClose={() => setSelectedOrderId(null)}

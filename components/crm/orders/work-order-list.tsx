@@ -25,7 +25,7 @@ export function WorkOrderList({
   }
 
   return (
-    <div className="space-y-3 overflow-auto max-h-[calc(100vh-400px)]">
+    <div className="space-y-3 overflow-auto h-[calc(100vh-350px)] pr-2">
       {filteredOrders.map((order) => (
         <WorkOrderCard
           key={order.id}
