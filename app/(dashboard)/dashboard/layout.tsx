@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, Suspense } from 'react';
-import { CircleIcon, LayoutDashboard, Settings, Shield, Activity, LogOut, Home } from 'lucide-react';
+import { LogOut, Home } from 'lucide-react';
 import { ThemeSelector } from '@/components/theme-selector';
 import { signOut } from '@/app/(login)/actions';
 import { User } from '@/lib/db/schema';
@@ -18,16 +18,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
   SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
@@ -40,9 +31,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { CRMSidebar } from '@/components/crm/layout/crm-sidebar';
+import { BlueprintBackground } from '@/components/crm/shared/blueprint-background';
+import { technicians, initialWorkOrders } from '@/lib/crm/mock-data';
+import { getNewOrdersCount, getUnpaidInvoicesCount } from '@/lib/crm/utils';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
 
 function UserMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -89,86 +83,28 @@ function UserMenu() {
   );
 }
 
-interface NavItem {
-  title: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  isActive?: boolean;
-}
-
-function DashboardSidebar() {
-  const pathname = usePathname();
-
-  const navItems: NavItem[] = [
-    {
-      title: 'Dashboard',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-      isActive: pathname === '/dashboard',
-    },
-    {
-      title: 'Activity',
-      href: '/dashboard/activity',
-      icon: Activity,
-      isActive: pathname === '/dashboard/activity',
-    },
-    {
-      title: 'General',
-      href: '/dashboard/general',
-      icon: Settings,
-      isActive: pathname === '/dashboard/general',
-    },
-    {
-      title: 'Security',
-      href: '/dashboard/security',
-      icon: Shield,
-      isActive: pathname === '/dashboard/security',
-    },
-  ];
-
-  return (
-    <Sidebar variant="inset">
-      <SidebarHeader>
-        <div className="flex items-center gap-2 px-4 py-2">
-          <CircleIcon className="h-6 w-6 text-primary" />
-          <span className="text-lg font-semibold">ACME Dashboard</span>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={item.isActive}>
-                    <Link href={item.href}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
-  );
-}
-
 function getBreadcrumbItems(pathname: string) {
   const segments = pathname.split('/').filter(Boolean);
   const items = [];
-  
-  items.push({ label: 'Dashboard', href: '/dashboard' });
-  
-  if (segments.length > 1) {
+
+  // Map routes to friendly names
+  const routeNames: Record<string, string> = {
+    'dashboard': 'Work Orders',
+    'schedule': 'Schedule',
+    'map': 'Route Map',
+    'invoices': 'Invoices',
+    'webhooks': 'Webhook Log',
+  };
+
+  if (pathname === '/dashboard') {
+    items.push({ label: 'Work Orders', href: '/dashboard' });
+  } else if (segments.length > 1) {
+    items.push({ label: 'Work Orders', href: '/dashboard' });
     const page = segments[segments.length - 1];
-    const pageLabel = page.charAt(0).toUpperCase() + page.slice(1);
+    const pageLabel = routeNames[page] || page.charAt(0).toUpperCase() + page.slice(1);
     items.push({ label: pageLabel, href: pathname });
   }
-  
+
   return items;
 }
 
@@ -180,15 +116,26 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const breadcrumbItems = getBreadcrumbItems(pathname);
 
+  // Calculate badge counts from mock data
+  const newOrdersCount = getNewOrdersCount(initialWorkOrders);
+  const sentInvoicesCount = getUnpaidInvoicesCount(initialWorkOrders);
+
   return (
     <SidebarProvider>
+      <BlueprintBackground />
       <Suspense fallback={null}>
         <CheckoutSuccessHandler />
       </Suspense>
       <SuccessNotification />
-      <DashboardSidebar />
+
+      <CRMSidebar
+        technicians={technicians}
+        newOrdersCount={newOrdersCount}
+        sentInvoicesCount={sentInvoicesCount}
+      />
+
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-sidebar-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex items-center gap-2 px-4 flex-1">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
@@ -218,7 +165,7 @@ export default function DashboardLayout({
             </Suspense>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 relative z-10">
           {children}
         </div>
       </SidebarInset>
