@@ -3,9 +3,9 @@ import { WorkOrderListProps } from '@/lib/crm/types';
 import { getWorkOrdersByStatus } from '@/lib/crm/utils';
 
 /**
- * Work Order List Component
+ * Work Order List Component (Outlook-style)
  *
- * Renders a scrollable list of work order cards.
+ * Renders a clean inbox-style list of work order rows.
  * Filters orders based on active status filter.
  */
 export function WorkOrderList({
@@ -18,14 +18,14 @@ export function WorkOrderList({
 
   if (filteredOrders.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
+      <div className="flex items-center justify-center h-64 text-muted-foreground bg-background border">
         <p>No work orders found</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 overflow-auto h-[calc(100vh-350px)] pr-2">
+    <div className="bg-background border overflow-auto h-[calc(100vh-350px)]">
       {filteredOrders.map((order) => (
         <WorkOrderCard
           key={order.id}

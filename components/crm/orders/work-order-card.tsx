@@ -1,82 +1,71 @@
-import { Card } from '@/components/ui/card';
-import { PriorityBadge } from '@/components/crm/shared/priority-badge';
-import { StatusBadge } from '@/components/crm/shared/status-badge';
 import { WorkOrderCardProps } from '@/lib/crm/types';
-import { formatTime, formatCurrency, getPriorityStripeColor } from '@/lib/crm/utils';
-import { MapPin, Clock, User } from 'lucide-react';
+import { formatTime, formatCurrency } from '@/lib/crm/utils';
 import { cn } from '@/lib/utils';
 
 /**
- * Work Order Card Component
+ * Work Order Card Component (Outlook-style)
  *
- * Displays an individual work order with priority stripe, badges, and key details.
- * Highlights when selected. Shows customer, issue, location, time, tech, and value.
+ * Clean, minimal inbox-style row for work orders.
+ * Simple design familiar to Microsoft users.
  */
 export function WorkOrderCard({ order, isSelected, onClick }: WorkOrderCardProps) {
-  const stripeColor = getPriorityStripeColor(order.priority);
+  const priorityIndicator = {
+    urgent: 'bg-red-600',
+    high: 'bg-orange-500',
+    medium: 'bg-blue-500',
+    low: 'bg-gray-400',
+  };
+
+  const statusText = {
+    new: 'New',
+    in_progress: 'In Progress',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+  };
 
   return (
-    <Card
+    <div
       className={cn(
-        'relative overflow-hidden cursor-pointer transition-all hover:shadow-md hover:scale-[1.02]',
-        isSelected && 'ring-2 ring-orange-600 bg-orange-600/5'
+        'relative border-b border-border p-4 cursor-pointer transition-colors hover:bg-muted/50',
+        isSelected && 'bg-muted/70 border-l-4 border-l-primary'
       )}
       onClick={onClick}
     >
-      {/* Priority stripe */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-1"
-        style={{ backgroundColor: stripeColor }}
-      />
+      {/* Priority indicator dot */}
+      <div className="absolute left-2 top-1/2 -translate-y-1/2">
+        <div className={cn('w-2 h-2', priorityIndicator[order.priority])} />
+      </div>
 
-      <div className="p-4 pl-5">
+      <div className="pl-3">
         {/* Header row */}
-        <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-muted-foreground">
-              {order.id}
-            </span>
-            <PriorityBadge priority={order.priority} />
-            <StatusBadge status={order.status} />
+            <span className="font-semibold text-sm">{order.customer}</span>
+            <span className="text-xs text-muted-foreground">•</span>
+            <span className="font-mono text-xs text-muted-foreground">{order.id}</span>
           </div>
-          <span className="text-xs text-muted-foreground">
-            {formatTime(order.receivedAt)}
-          </span>
+          <span className="text-xs text-muted-foreground">{formatTime(order.receivedAt)}</span>
         </div>
 
-        {/* Customer & Issue */}
-        <h3 className="font-semibold text-sm mb-1">{order.customer}</h3>
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-          {order.issue}
-        </p>
+        {/* Issue/Subject */}
+        <p className="text-sm mb-2 line-clamp-1">{order.issue}</p>
 
-        {/* Footer details */}
+        {/* Meta info row */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              <span className="truncate max-w-[120px]">
-                {order.address.split(',')[0]}
-              </span>
-            </div>
-            {order.scheduledFor && (
-              <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>{formatTime(order.scheduledFor)}</span>
-              </div>
-            )}
+            <span>{statusText[order.status]}</span>
             {order.assignedTo && (
-              <div className="flex items-center gap-1">
-                <User className="h-3 w-3" />
-                <span>{order.assignedTo.split(' ')[0]}</span>
-              </div>
+              <>
+                <span>•</span>
+                <span>{order.assignedTo}</span>
+              </>
             )}
+            <span>•</span>
+            <span>{order.address.split(',')[0]}</span>
           </div>
-          <div className="font-semibold text-foreground">
-            {formatCurrency(order.estimatedValue)}
-          </div>
+          <span className="font-semibold text-foreground">{formatCurrency(order.estimatedValue)}</span>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }

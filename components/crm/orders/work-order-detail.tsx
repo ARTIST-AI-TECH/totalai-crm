@@ -1,10 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { PriorityBadge } from '@/components/crm/shared/priority-badge';
-import { StatusBadge } from '@/components/crm/shared/status-badge';
 import { WorkOrderDetailProps } from '@/lib/crm/types';
 import {
   formatDateTime,
@@ -32,10 +29,10 @@ import {
 } from 'lucide-react';
 
 /**
- * Work Order Detail Panel Component
+ * Work Order Detail Panel Component (Outlook-style)
  *
- * Sticky right-side panel showing full details of selected work order.
- * Displays conditional action buttons based on order status.
+ * Clean, professional detail view matching Outlook's reading pane.
+ * Displays full order information with minimal colors.
  */
 export function WorkOrderDetail({
   order,
@@ -61,17 +58,23 @@ export function WorkOrderDetail({
 
   const invoiceTotal = order.invoice ? calculateInvoiceTotal(order.invoice.items) : 0;
 
+  const priorityLabels = {
+    urgent: 'URGENT',
+    high: 'High Priority',
+    medium: 'Medium Priority',
+    low: 'Low Priority',
+  };
+
   return (
     <Card className="h-fit min-h-[600px]">
       <CardHeader className="border-b">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <CardTitle className="font-mono text-lg">{order.id}</CardTitle>
-              <PriorityBadge priority={order.priority} />
-              <StatusBadge status={order.status} />
+            <div className="flex items-center gap-3 mb-2">
+              <h3 className="text-xl font-semibold">{order.customer}</h3>
+              <span className="text-sm text-muted-foreground">{priorityLabels[order.priority]}</span>
             </div>
-            <h3 className="text-xl font-bold">{order.customer}</h3>
+            <p className="text-sm text-muted-foreground font-mono">{order.id}</p>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -95,7 +98,7 @@ export function WorkOrderDetail({
             </Button>
           )}
           {showComplete && (
-            <Button onClick={onComplete} size="sm" className="bg-green-600 hover:bg-green-700">
+            <Button onClick={onComplete} size="sm">
               <CheckCircle className="h-4 w-4 mr-2" />
               Complete Job
             </Button>
@@ -107,13 +110,13 @@ export function WorkOrderDetail({
             </Button>
           )}
           {showSendInvoice && onSendInvoice && (
-            <Button onClick={onSendInvoice} size="sm" className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={onSendInvoice} size="sm">
               <Send className="h-4 w-4 mr-2" />
               Send Invoice
             </Button>
           )}
           {showMarkPaid && onMarkPaid && (
-            <Button onClick={onMarkPaid} size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={onMarkPaid} size="sm">
               <CheckCheck className="h-4 w-4 mr-2" />
               Mark Paid
             </Button>
@@ -124,31 +127,31 @@ export function WorkOrderDetail({
 
         {/* Issue Description */}
         <div>
-          <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+          <h4 className="font-semibold text-sm mb-2 flex items-center gap-2 text-muted-foreground">
             <FileText className="h-4 w-4" />
-            Issue
+            Issue Description
           </h4>
-          <p className="text-sm">{order.issue}</p>
+          <p className="text-sm leading-relaxed">{order.issue}</p>
         </div>
 
         {/* Contact Info */}
         <div className="space-y-2">
-          <h4 className="font-semibold text-sm mb-2">Contact Information</h4>
-          <div className="space-y-1 text-sm">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Phone className="h-4 w-4" />
-              <a href={`tel:${order.phone}`} className="hover:text-foreground">
+          <h4 className="font-semibold text-sm mb-3 text-muted-foreground">Contact Information</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-2">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <a href={`tel:${order.phone}`} className="hover:underline">
                 {order.phone}
               </a>
             </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Mail className="h-4 w-4" />
-              <a href={`mailto:${order.email}`} className="hover:text-foreground">
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <a href={`mailto:${order.email}`} className="hover:underline">
                 {order.email}
               </a>
             </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-4 w-4" />
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
               <span>{order.address}</span>
             </div>
           </div>
@@ -156,29 +159,27 @@ export function WorkOrderDetail({
 
         {/* Notes */}
         {order.notes && (
-          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-3">
+          <div className="bg-amber-50 dark:bg-amber-950/20 border-l-4 border-l-amber-500 p-4">
             <div className="flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-sm text-amber-900 dark:text-amber-100 mb-1">
-                  Notes
-                </h4>
-                <p className="text-sm text-amber-800 dark:text-amber-200">{order.notes}</p>
+                <h4 className="font-semibold text-sm mb-1">Notes</h4>
+                <p className="text-sm">{order.notes}</p>
               </div>
             </div>
           </div>
         )}
 
         {/* Value & Schedule Grid */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-6">
           <div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
               <DollarSign className="h-4 w-4" />
               <span>Estimated Value</span>
             </div>
-            <p className="text-lg font-bold">{formatCurrency(order.estimatedValue)}</p>
+            <p className="text-lg font-semibold">{formatCurrency(order.estimatedValue)}</p>
             {order.actualValue && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground mt-1">
                 Actual: {formatCurrency(order.actualValue)}
               </p>
             )}
@@ -203,9 +204,9 @@ export function WorkOrderDetail({
                 <User className="h-4 w-4" />
                 <span>Assigned Technician</span>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-muted">
-                <Avatar>
-                  <AvatarFallback className="bg-blue-600 text-white">
+              <div className="flex items-center gap-3 p-3 bg-muted/50 border">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                     {getTechnicianInitials(order.assignedTo)}
                   </AvatarFallback>
                 </Avatar>
@@ -224,27 +225,20 @@ export function WorkOrderDetail({
             <Separator />
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-sm flex items-center gap-2">
+                <h4 className="font-semibold text-sm flex items-center gap-2 text-muted-foreground">
                   <Receipt className="h-4 w-4" />
                   Invoice {order.invoice.id}
                 </h4>
-                <Badge
-                  variant={order.invoice.status === 'paid' ? 'default' : 'secondary'}
-                  className={
-                    order.invoice.status === 'paid'
-                      ? 'bg-green-600'
-                      : order.invoice.status === 'sent'
-                      ? 'bg-blue-600'
-                      : ''
-                  }
-                >
-                  {order.invoice.status.charAt(0).toUpperCase() + order.invoice.status.slice(1)}
-                </Badge>
+                <span className="text-sm font-medium">
+                  {order.invoice.status === 'paid' && '✓ Paid'}
+                  {order.invoice.status === 'sent' && 'Sent'}
+                  {order.invoice.status === 'draft' && 'Draft'}
+                </span>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 bg-muted/30 p-4 border">
                 {order.invoice.items.map((item, idx) => (
                   <div key={idx} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">
+                    <span>
                       {item.description} (x{item.qty})
                     </span>
                     <span className="font-semibold">
@@ -253,17 +247,17 @@ export function WorkOrderDetail({
                   </div>
                 ))}
                 <Separator />
-                <div className="flex justify-between font-bold">
+                <div className="flex justify-between font-semibold">
                   <span>Total</span>
                   <span>{formatCurrencyDetailed(invoiceTotal)}</span>
                 </div>
                 {order.invoice.sentAt && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mt-2">
                     Sent: {formatDateTime(order.invoice.sentAt)}
                   </p>
                 )}
                 {order.invoice.paidAt && (
-                  <p className="text-xs text-green-600">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Paid: {formatDateTime(order.invoice.paidAt)}
                   </p>
                 )}
