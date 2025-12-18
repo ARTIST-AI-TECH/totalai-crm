@@ -8,8 +8,8 @@ import {
 } from '@/lib/db/queries';
 import { getBaseUrl } from '@/lib/utils/base-url';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-07-30.basil'
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
+  apiVersion: '2025-04-30.basil'
 });
 
 export async function createCheckoutSession({
