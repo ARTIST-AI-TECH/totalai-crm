@@ -3,7 +3,7 @@
 **Workflow ID**: `opBCXYhYWnf0YHfk`
 **Workflow Name**: PPG-create-job
 **n8n Instance**: https://n8n-totalai-au.badou.ai
-**Branch**: `feature/n8n-workflow-integration`
+**Branch**: `puppeteerScrape`
 
 ---
 
@@ -74,27 +74,121 @@ Automate the complete flow from work order email → Simpro job creation → Flo
 
 ---
 
-## 🔄 Phase 2: Web Scraping (IN PROGRESS)
+## ✅ Phase 2: Web Scraping with Puppeteer (COMPLETED)
 
-**Status**: Not started
-**Estimated Time**: 1-2 hours
+**Date**: December 18, 2025
+**Status**: Completed - FireCrawl replaced with Puppeteer community node
 
-### Nodes to Add:
+### Implementation Decision: Puppeteer vs FireCrawl
 
-1. **Conditional: Check URL Found?**
-   - If no URL → Send failure notification
-   - If URL found → Continue to fetch page
+**Initial Approach**: FireCrawl API with AI-based extraction
+- ✅ Worked well for structured data extraction
+- ❌ Cost: $0.50-1.00 per scrape request
+- ❌ External API dependency
+- ❌ AI-based extraction (non-deterministic)
 
-2. **HTTP Request: Fetch Work Order Page**
-   - GET request to extracted URL
-   - Timeout: 30 seconds
-   - Response: HTML string
+**Final Approach**: Puppeteer Community Node (n8n-nodes-puppeteer)
+- ✅ Zero API costs (compute-only)
+- ✅ DOM-based extraction (deterministic, same HTML → same output)
+- ✅ Faster execution (no external API roundtrip)
+- ✅ Combined scraping + PDF generation in single node
+- ✅ Full control over extraction logic
+- ✅ Self-hosted in n8n instance
 
-3. **Code: Parse Work Order Details**
-   - Extract customer, address, phone, email, issue
-   - Auto-detect priority from keywords
-   - Generate work order ID
-   - Output structured JSON
+### Nodes Added:
+
+1. **❓ URL Found?** (ID: `check-url-found`)
+   - **Type**: IF node
+   - **Condition**: Check if `workOrderLink` is not empty
+   - **True Branch**: Continue to scraping
+   - **False Branch**: Log error (⚠️ No URL Found - Log Error node)
+
+2. **Puppeteer Scrape & Extract** (ID: `691fe30d-7310-49e2-9b75-52934e06e41d`)
+   - **Type**: `n8n-nodes-puppeteer.puppeteer` (Community Node)
+   - **Operation**: Custom JavaScript execution
+   - **Source**: https://github.com/drudge/n8n-nodes-puppeteer
+
+   **Extraction Logic**:
+   - Uses DOM selectors based on Tapi HTML structure
+   - Extracts 11 fields from work order page
+   - Generates print-optimized PDF (A4, print CSS emulation)
+   - Returns data in same format as FireCrawl for compatibility
+
+   **Fields Extracted**:
+   - `workOrderId` - via `[data-test="work-order-number"]`
+   - `issueTitle` - via `[data-test="issue-title"]`
+   - `issueDescription` - via `[data-test="issue-description"] p`
+   - `propertyAddress` - parsed from "Property:" label section
+   - `tenantName` - first `<strong>` under "Tenants:" label
+   - `tenantPhone` - via `a[href^="tel:"]` in tenant section
+   - `tenantEmail` - via `a[href^="mailto:"]` in tenant section
+   - `propertyManagerName` - via `<strong>` under "Managed by:" label
+   - `propertyManagerEmail` - via `a[href^="mailto:"]` in manager section
+   - `submittedDate` - via `.date-time` data attribute
+   - `keyNumber` - parsed from "Key number:" label
+
+   **PDF Generation**:
+   ```javascript
+   await page.emulateMediaType('print'); // Trigger print CSS
+   const pdfBuffer = await page.pdf({
+     format: 'A4',
+     printBackground: true,
+     margin: { top: '10mm', bottom: '10mm', left: '10mm', right: '10mm' }
+   });
+   ```
+
+3. **📝 Transform FireCrawl to Work Order** (Updated)
+   - Now handles Puppeteer output format
+   - Maintains compatibility with existing downstream nodes
+
+### Validation & Testing
+
+**Comparison Results** (Puppeteer vs FireCrawl):
+- 8/11 fields: 100% exact match
+- 3/11 fields: Minor formatting differences (easily reconcilable)
+- Match rate: 73% exact, 100% data accuracy
+
+**Key Findings**:
+- All critical data extracted correctly by Puppeteer
+- Differences were only formatting (uppercase, date precision)
+- Both methods returned binary PDF data
+- Puppeteer output was deterministic across multiple runs
+
+See `/docs/api/jobs/scrape-compared.md` for detailed comparison.
+
+### Current Flow:
+
+```
+🧪 Manual Test Trigger
+        ↓
+📥 Get Test Emails (Tapi)
+        ↓
+🔗 Extract Work Order Link
+        ↓
+❓ URL Found?
+    ├─ True → Puppeteer Scrape & Extract → Merge → 📝 Transform to Work Order
+    └─ False → ⚠️ No URL Found - Log Error
+```
+
+### Files Created:
+
+- `/docs/api/jobs/tapi-raw.html` - Sample Tapi work order HTML for selector testing
+- `/docs/api/jobs/puppeteer-scrape-example.md` - Puppeteer usage guide
+- `/docs/api/jobs/scrape-compared.md` - Side-by-side comparison of FireCrawl vs Puppeteer outputs
+
+### What Works Now:
+
+- ✅ DOM-based data extraction from Tapi work orders
+- ✅ Print-optimized PDF generation (matches client workflow)
+- ✅ Zero API costs (replaced $0.50-1.00 per request)
+- ✅ All 11 required fields extracted accurately
+- ✅ Binary PDF data attached to workflow output
+- ✅ Faster execution (no external API calls)
+- ✅ Deterministic output (same input → same output)
+
+### Next Steps:
+
+**Phase 3**: Simpro customer/site lookup and job creation
 
 ---
 
@@ -209,12 +303,12 @@ The workflow has pinned test data from Simpro:
 
 ## Commits
 
-- [ ] Phase 1: Email detection and link extraction
-- [ ] Phase 2: Web scraping
+- [x] Phase 1: Email detection and link extraction (Dec 5, 2025)
+- [x] Phase 2: Puppeteer web scraping + PDF generation (Dec 18, 2025)
 - [ ] Phase 3: Simpro job creation
 - [ ] Phase 4: PDF attachment
 - [ ] Phase 5: CRM webhook integration
 
 ---
 
-**Last Updated**: December 5, 2025
+**Last Updated**: December 18, 2025
