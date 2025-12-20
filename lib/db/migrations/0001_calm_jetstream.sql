@@ -1,0 +1,63 @@
+CREATE TABLE "technicians" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"team_id" integer NOT NULL,
+	"name" varchar(255) NOT NULL,
+	"phone" varchar(50),
+	"email" varchar(255),
+	"status" varchar(50) DEFAULT 'available',
+	"color" varchar(7),
+	"current_job_id" integer,
+	"active" boolean DEFAULT true,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
+CREATE TABLE "work_orders" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"team_id" integer NOT NULL,
+	"work_order_id" varchar(50) NOT NULL,
+	"external_id" varchar(50) NOT NULL,
+	"pm_platform" varchar(50),
+	"simpro_job_id" integer,
+	"simpro_customer_id" integer,
+	"simpro_customer_name" varchar(255),
+	"simpro_site_id" integer,
+	"simpro_site_name" varchar(255),
+	"tenant_name" varchar(255),
+	"tenant_phone" varchar(50),
+	"tenant_email" varchar(255),
+	"pm_name" varchar(255),
+	"pm_email" varchar(255),
+	"property_address" text NOT NULL,
+	"key_number" varchar(50),
+	"issue_title" varchar(255) NOT NULL,
+	"issue_description" text,
+	"priority" varchar(20) NOT NULL,
+	"status" varchar(50) NOT NULL,
+	"simpro_stage" varchar(50),
+	"pdf_file_name" varchar(255),
+	"pdf_thumbnail_path" varchar(500),
+	"simpro_attachment_id" varchar(255),
+	"simpro_job_url" text,
+	"email_sender" varchar(255),
+	"email_subject" text,
+	"email_message_id" varchar(255),
+	"source_url" text,
+	"received_at" timestamp NOT NULL,
+	"scraped_at" timestamp,
+	"job_created_at" timestamp,
+	"assigned_at" timestamp,
+	"completed_at" timestamp,
+	"estimated_value" numeric(10, 2),
+	"actual_value" numeric(10, 2),
+	"assigned_to" integer,
+	"scheduled_for" timestamp,
+	"is_read" boolean DEFAULT false,
+	"raw_data" jsonb,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
+ALTER TABLE "technicians" ADD CONSTRAINT "technicians_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "work_orders" ADD CONSTRAINT "work_orders_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "work_orders" ADD CONSTRAINT "work_orders_assigned_to_technicians_id_fk" FOREIGN KEY ("assigned_to") REFERENCES "public"."technicians"("id") ON DELETE no action ON UPDATE no action;

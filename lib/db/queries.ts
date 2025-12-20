@@ -1,6 +1,6 @@
 import { desc, and, eq, isNull } from 'drizzle-orm';
 import { db } from './drizzle';
-import { activityLogs, teamMembers, teams, users } from './schema';
+import { activityLogs, teamMembers, teams, users, workOrders, technicians } from './schema';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth/session';
 
@@ -127,4 +127,76 @@ export async function getTeamForUser() {
   });
 
   return result?.team || null;
+}
+
+// Work Orders Queries
+export async function getWorkOrders(
+  teamId: number,
+  filters?: {
+    status?: string;
+    priority?: string;
+    limit?: number;
+  }
+) {
+  const conditions = [eq(workOrders.teamId, teamId)];
+
+  if (filters?.status) {
+    conditions.push(eq(workOrders.status, filters.status));
+  }
+
+  if (filters?.priority) {
+    conditions.push(eq(workOrders.priority, filters.priority));
+  }
+
+  return await db.query.workOrders.findMany({
+    where: and(...conditions),
+    orderBy: [desc(workOrders.receivedAt)],
+    limit: filters?.limit || 50,
+    with: {
+      assignedTechnician: true,
+    },
+  });
+}
+
+export async function getWorkOrderById(id: number, teamId: number) {
+  return await db.query.workOrders.findFirst({
+    where: and(eq(workOrders.id, id), eq(workOrders.teamId, teamId)),
+    with: {
+      assignedTechnician: true,
+      team: true,
+    },
+  });
+}
+
+export async function getWorkOrderStats(teamId: number) {
+  const orders = await db.query.workOrders.findMany({
+    where: eq(workOrders.teamId, teamId),
+  });
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  return {
+    total: orders.length,
+    new: orders.filter((o) => o.status === 'new').length,
+    jobCreated: orders.filter((o) => o.status === 'job_created').length,
+    assigned: orders.filter((o) => o.status === 'assigned').length,
+    completed: orders.filter((o) => o.status === 'completed').length,
+    completedToday: orders.filter(
+      (o) => o.status === 'completed' && o.completedAt && o.completedAt >= todayStart
+    ).length,
+    totalRevenue: orders
+      .filter((o) => o.actualValue)
+      .reduce((sum, o) => sum + Number(o.actualValue || 0), 0),
+    pipelineValue: orders
+      .filter((o) => o.status !== 'completed' && o.estimatedValue)
+      .reduce((sum, o) => sum + Number(o.estimatedValue || 0), 0),
+  };
+}
+
+export async function getTechnicians(teamId: number) {
+  return await db.query.technicians.findMany({
+    where: and(eq(technicians.teamId, teamId), eq(technicians.active, true)),
+    orderBy: [desc(technicians.name)],
+  });
 }
