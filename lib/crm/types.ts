@@ -47,6 +47,10 @@ export interface WorkOrder {
   notes?: string;
   invoice?: Invoice;
   isRead?: boolean; // Outlook-style read/unread state
+  // Simpro metadata
+  simproJobUrl?: string;
+  simproJobId?: number;
+  jobCreatedAt?: Date;
 }
 
 export interface Technician {

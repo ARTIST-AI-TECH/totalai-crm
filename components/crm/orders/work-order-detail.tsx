@@ -25,7 +25,9 @@ import {
   CheckCircle,
   Receipt,
   Send,
-  CheckCheck
+  CheckCheck,
+  ExternalLink,
+  Briefcase
 } from 'lucide-react';
 
 /**
@@ -166,6 +168,29 @@ export function WorkOrderDetail({
                 <h4 className="font-semibold text-sm mb-1">Notes</h4>
                 <p className="text-sm">{order.notes}</p>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Simpro Job Link */}
+        {(order as any).simproJobUrl && (
+          <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-blue-600" />
+                <div>
+                  <h4 className="font-semibold text-sm">Simpro Job Created</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Job #{(order as any).simproJobId} • {(order as any).jobCreatedAt ? new Date((order as any).jobCreatedAt).toLocaleString() : 'Today'}
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <a href={(order as any).simproJobUrl} target="_blank" rel="noopener noreferrer" className="gap-2">
+                  View in Simpro
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </Button>
             </div>
           </div>
         )}

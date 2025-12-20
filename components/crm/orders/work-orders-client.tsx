@@ -33,6 +33,10 @@ function convertToUIWorkOrder(dbOrder: any): WorkOrder {
     actualValue: dbOrder.actualValue ? Number(dbOrder.actualValue) : 0,
     notes: dbOrder.issueDescription,
     isRead: dbOrder.isRead || false,
+    // Add Simpro metadata for display
+    simproJobUrl: dbOrder.simproJobUrl,
+    simproJobId: dbOrder.simproJobId,
+    jobCreatedAt: dbOrder.jobCreatedAt,
   };
 }
 

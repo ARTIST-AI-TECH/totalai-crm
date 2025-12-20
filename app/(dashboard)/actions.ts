@@ -56,6 +56,9 @@ export async function triggerWorkOrderProcessing() {
         simproSiteId: workOrderData.simpro?.siteId || workOrderData.siteId?.ID,
         simproSiteName: workOrderData.simpro?.siteName || workOrderData.siteId?.Name,
         simproStage: workOrderData.simpro?.stage || workOrderData.stage,
+        simproJobUrl: (workOrderData.simpro?.jobId || workOrderData.jobId)
+          ? `https://platinumplumbinggassolutions.simprosuite.com/job/${workOrderData.simpro?.jobId || workOrderData.jobId}`
+          : null,
 
         tenantName: workOrderData.tenant?.name,
         tenantPhone: workOrderData.tenant?.phone,
