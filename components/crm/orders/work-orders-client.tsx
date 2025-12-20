@@ -14,7 +14,7 @@ import { WorkOrder } from '@/lib/crm/types';
 // Convert database work order to UI work order type
 function convertToUIWorkOrder(dbOrder: any): WorkOrder {
   return {
-    id: dbOrder.workOrderId,
+    id: dbOrder.externalId, // Use TAPI ID for customer-facing display
     customer: dbOrder.tenantName || 'Unknown',
     address: dbOrder.propertyAddress,
     lat: 0, // TODO: Geocode address
