@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         simproSiteName: payload.simpro?.siteName,
         simproStage: payload.simpro?.stage,
         simproJobUrl: payload.simpro?.jobId
-          ? `https://platinumplumbinggassolutions.simprosuite.com/job/${payload.simpro.jobId}`
+          ? `https://platinumplumbinggassolutions.simprosuite.com/staff/editProject.php?jobID=${payload.simpro.jobId}`
           : null,
 
         // Tenant Information
