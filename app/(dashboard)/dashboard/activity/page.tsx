@@ -23,6 +23,13 @@ import {
   Eye,
   Clock,
   Filter,
+  FileText,
+  Briefcase,
+  UserCheck,
+  CheckCheck,
+  XCircle,
+  Webhook,
+  Database,
   type LucideIcon,
 } from 'lucide-react';
 import { ActivityType } from '@/lib/db/schema';
@@ -39,6 +46,19 @@ const iconMap: Record<ActivityType, LucideIcon> = {
   [ActivityType.REMOVE_TEAM_MEMBER]: UserMinus,
   [ActivityType.INVITE_TEAM_MEMBER]: Mail,
   [ActivityType.ACCEPT_INVITATION]: CheckCircle,
+
+  // Work Order Events
+  [ActivityType.WORK_ORDER_RECEIVED]: FileText,
+  [ActivityType.WORK_ORDER_SCRAPED]: Database,
+  [ActivityType.WORK_ORDER_JOB_CREATED]: Briefcase,
+  [ActivityType.WORK_ORDER_ASSIGNED]: UserCheck,
+  [ActivityType.WORK_ORDER_COMPLETED]: CheckCheck,
+  [ActivityType.WORK_ORDER_ERROR]: XCircle,
+
+  // Webhook Events
+  [ActivityType.WEBHOOK_RECEIVED]: Webhook,
+  [ActivityType.WEBHOOK_PROCESSED]: CheckCircle,
+  [ActivityType.WEBHOOK_ERROR]: AlertCircle,
 };
 
 const actionColors: Record<ActivityType, string> = {
@@ -52,6 +72,19 @@ const actionColors: Record<ActivityType, string> = {
   [ActivityType.REMOVE_TEAM_MEMBER]: 'bg-destructive/10 text-destructive border-destructive/20',
   [ActivityType.INVITE_TEAM_MEMBER]: 'bg-blue-100 text-blue-600 border-blue-200',
   [ActivityType.ACCEPT_INVITATION]: 'bg-green-100 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
+
+  // Work Order Events
+  [ActivityType.WORK_ORDER_RECEIVED]: 'bg-blue-100 text-blue-600 border-blue-200',
+  [ActivityType.WORK_ORDER_SCRAPED]: 'bg-purple-100 text-purple-600 border-purple-200',
+  [ActivityType.WORK_ORDER_JOB_CREATED]: 'bg-green-100 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
+  [ActivityType.WORK_ORDER_ASSIGNED]: 'bg-blue-100 text-blue-600 border-blue-200',
+  [ActivityType.WORK_ORDER_COMPLETED]: 'bg-green-100 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
+  [ActivityType.WORK_ORDER_ERROR]: 'bg-destructive/10 text-destructive border-destructive/20',
+
+  // Webhook Events
+  [ActivityType.WEBHOOK_RECEIVED]: 'bg-blue-100 text-blue-600 border-blue-200',
+  [ActivityType.WEBHOOK_PROCESSED]: 'bg-green-100 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
+  [ActivityType.WEBHOOK_ERROR]: 'bg-destructive/10 text-destructive border-destructive/20',
 };
 
 function getRelativeTime(date: Date) {
