@@ -7,15 +7,15 @@
     "Customer": {
       "ID": 3370,
       "CompanyName": "Harris Property Management - Kent Town",
-      "GivenName": "",
-      "FamilyName": ""
+      "GivenName": ",
+      "FamilyName": "
     },
     "CustomerContract": {
       "ID": 3369,
       "Name": "Harris Property Management - Kent Town",
-      "StartDate": "",
-      "EndDate": "",
-      "ContractNo": ""
+      "StartDate": ",
+      "EndDate": ",
+      "ContractNo": "
     },
     "CustomerContact": null,
     "AdditionalContacts": [],
@@ -24,7 +24,7 @@
       "Name": "366 Portrush Road, Tusmore"
     },
     "SiteContact": null,
-    "OrderNo": "",
+    "OrderNo": ",
     "RequestNo": "TAPI-002630 - BLOCKED TOILET",
     "Name": "TAPI-002630 - BLOCKED TOILET",
     "Description": "<div style=\"font-size: 10pt;\">Morning,\n\nWe have an issue with the ensuite toilet over the weekend with the toilet blocked and the water bubbling. The other toilets are fine at the moment.\n\nPlease call Maria for access</div>",
