@@ -7,6 +7,7 @@ import { WorkOrderDetail } from '@/components/crm/orders/work-order-detail';
 import { AssignModal } from '@/components/crm/orders/assign-modal';
 import { ScheduleModal } from '@/components/crm/orders/schedule-modal';
 import { NotificationToast } from '@/components/crm/shared/notification-toast';
+import { ProcessWorkOrdersButton } from '@/components/crm/orders/process-work-orders-button';
 import { WorkOrder as DBWorkOrder, Technician } from '@/lib/db/schema';
 import { WorkOrder } from '@/lib/crm/types';
 
@@ -242,6 +243,12 @@ export function WorkOrdersClient({ initialWorkOrders, initialStats, technicians 
 
   return (
     <div className="space-y-6 py-6">
+      {/* Manual Process Button */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Work Orders</h1>
+        <ProcessWorkOrdersButton />
+      </div>
+
       {/* Filters */}
       <OrderFilters
         activeFilter={activeFilter}
