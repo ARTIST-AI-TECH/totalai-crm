@@ -1,0 +1,207 @@
+[
+  {
+    "success": true,
+    "jobId": 54451,
+    "jobName": "TAPI-002630 - BLOCKED TOILET",
+    "customerId": {
+      "ID": 3370,
+      "CompanyName": "Harris Property Management - Kent Town",
+      "GivenName": "",
+      "FamilyName": ""
+    },
+    "siteId": {
+      "ID": 23231,
+      "Name": "366 Portrush Road, Tusmore"
+    },
+    "stage": "Pending",
+    "status": {
+      "ID": 10,
+      "Name": "Job : In Progress",
+      "Color": "#4ca6ff"
+    },
+    "createdJob": {
+      "ID": 54451,
+      "Type": "Service",
+      "Customer": {
+        "ID": 3370,
+        "CompanyName": "Harris Property Management - Kent Town",
+        "GivenName": "",
+        "FamilyName": ""
+      },
+      "CustomerContract": {
+        "ID": 3369,
+        "Name": "Harris Property Management - Kent Town",
+        "StartDate": "",
+        "EndDate": "",
+        "ContractNo": ""
+      },
+      "CustomerContact": null,
+      "AdditionalContacts": [],
+      "Site": {
+        "ID": 23231,
+        "Name": "366 Portrush Road, Tusmore"
+      },
+      "SiteContact": null,
+      "OrderNo": "",
+      "RequestNo": "TAPI-002630 - BLOCKED TOILET",
+      "Name": "TAPI-002630 - BLOCKED TOILET",
+      "Description": "<div style=\"font-size: 10pt;\">Morning,\n\nWe have an issue with the ensuite toilet over the weekend with the toilet blocked and the water bubbling. The other toilets are fine at the moment.\n\nPlease call Maria for access</div>",
+      "Notes": "<div style=\"font-size: 10pt;\">Property Manager: Alex Gangnuzs (alex.gangnuzs@harrisre.com.au)\nTenant: Maria Atsikbasis (0422 844 904)\nKey Number: A1856\nSubmitted: 2025-11-30T23:35:56.953000</div>",
+      "DateIssued": "2025-12-20",
+      "DueDate": null,
+      "DueTime": null,
+      "Tags": [],
+      "Salesperson": null,
+      "ProjectManager": null,
+      "Technicians": [],
+      "Technician": null,
+      "Stage": "Pending",
+      "Status": {
+        "ID": 10,
+        "Name": "Job : In Progress",
+        "Color": "#4ca6ff"
+      },
+      "ResponseTime": {},
+      "IsVariation": false,
+      "LinkedVariations": [],
+      "ConvertedFromQuote": null,
+      "ConvertedFrom": null,
+      "DateModified": "2025-12-21T06:51:29+10:30",
+      "AutoAdjustStatus": true,
+      "IsRetentionEnabled": false,
+      "Total": {
+        "ExTax": 0,
+        "Tax": 0,
+        "IncTax": 0
+      },
+      "Totals": {
+        "MaterialsCost": {
+          "Actual": 0,
+          "Committed": 0,
+          "Estimate": 0,
+          "Revised": 0,
+          "Revized": 0
+        },
+        "ResourcesCost": {
+          "Total": {
+            "Actual": 0,
+            "Committed": 0,
+            "Estimate": 0,
+            "Revised": 0,
+            "Revized": 0
+          },
+          "Labor": {
+            "Actual": 0,
+            "Committed": 0,
+            "Estimate": 0,
+            "Revised": 0,
+            "Revized": 0
+          },
+          "LaborHours": {
+            "Actual": 0,
+            "Committed": 0,
+            "Estimate": 0,
+            "Revised": 0,
+            "Revized": 0
+          },
+          "PlantAndEquipment": {
+            "Actual": 0,
+            "Committed": 0,
+            "Estimate": 0,
+            "Revised": 0,
+            "Revized": 0
+          },
+          "PlantAndEquipmentHours": {
+            "Actual": 0,
+            "Estimate": 0,
+            "Revised": 0,
+            "Revized": 0
+          },
+          "Commission": {
+            "Actual": 0,
+            "Estimate": 0,
+            "Revised": 0
+          },
+          "Overhead": {
+            "Actual": 0,
+            "Committed": 0,
+            "Estimate": 0,
+            "Revised": 0,
+            "Revized": 0
+          }
+        },
+        "MaterialsMarkup": {
+          "Actual": 0,
+          "Estimate": 0,
+          "Revised": 0,
+          "Revized": 0
+        },
+        "ResourcesMarkup": {
+          "Total": {
+            "Actual": 0,
+            "Estimate": 0,
+            "Revised": 0,
+            "Revized": 0
+          },
+          "Labor": {
+            "Actual": 0,
+            "Estimate": 0,
+            "Revised": 0,
+            "Revized": 0
+          },
+          "PlantAndEquipment": {
+            "Actual": 0,
+            "Estimate": 0,
+            "Revised": 0,
+            "Revized": 0
+          }
+        },
+        "Adjusted": {
+          "Actual": 0,
+          "Estimate": 0,
+          "Revised": 0,
+          "Revized": 0
+        },
+        "MembershipDiscount": 0,
+        "Discount": 0,
+        "STCs": 0,
+        "VEECs": 0,
+        "GrossProfitLoss": {
+          "Actual": 0,
+          "Estimate": 0,
+          "Revised": 0,
+          "Revized": 0
+        },
+        "GrossMargin": {
+          "Actual": 0,
+          "Estimate": 0,
+          "Revised": 0,
+          "Revized": 0
+        },
+        "NettProfitLoss": {
+          "Actual": 0,
+          "Estimate": 0,
+          "Revised": 0,
+          "Revized": 0
+        },
+        "NettMargin": {
+          "Actual": 0,
+          "Estimate": 0,
+          "Revised": 0,
+          "Revized": 0
+        },
+        "InvoicedValue": 0,
+        "InvoicePercentage": 0
+      },
+      "CustomFields": [],
+      "STC": {
+        "STCsEligible": false,
+        "VEECsEligible": false,
+        "STCValue": 0,
+        "VEECValue": 0
+      },
+      "CompletedDate": null
+    },
+    "message": "⚠️ Job created - will be deleted in next step"
+  }
+]
