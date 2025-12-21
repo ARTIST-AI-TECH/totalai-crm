@@ -197,30 +197,20 @@ export function WorkOrderDetail({
 
         {/* Automation & Schedule Grid */}
         <div className="grid grid-cols-2 gap-6">
-          <div>
-            {(order as any).simproJobId ? (
-              <>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                  <Briefcase className="h-4 w-4" />
-                  <span>Added to Simpro</span>
-                </div>
-                <p className="text-lg font-semibold">Job #{(order as any).simproJobId}</p>
-                {(order as any).jobCreatedAt && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {new Date((order as any).jobCreatedAt).toLocaleString()}
-                  </p>
-                )}
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                  <DollarSign className="h-4 w-4" />
-                  <span>Estimated Value</span>
-                </div>
-                <p className="text-lg font-semibold">{formatCurrency(order.estimatedValue)}</p>
-              </>
-            )}
-          </div>
+          {(order as any).simproJobId && (
+            <div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                <Briefcase className="h-4 w-4" />
+                <span>Added to Simpro</span>
+              </div>
+              <p className="text-lg font-semibold">Job #{(order as any).simproJobId}</p>
+              {(order as any).jobCreatedAt && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  {new Date((order as any).jobCreatedAt).toLocaleString()}
+                </p>
+              )}
+            </div>
+          )}
           {order.scheduledFor && (
             <div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
