@@ -96,19 +96,19 @@ export async function triggerWorkOrderProcessing() {
           ? `https://platinumplumbinggassolutions.simprosuite.com/staff/editProject.php?jobID=${workOrderData.simpro?.jobId || workOrderData.jobId}`
           : null,
 
-        tenantName: workOrderData.tenant?.name,
-        tenantPhone: workOrderData.tenant?.phone,
-        tenantEmail: workOrderData.tenant?.email,
+        tenantName: workOrderData.tenant?.name || workOrderData.customer,
+        tenantPhone: workOrderData.tenant?.phone || workOrderData.phone,
+        tenantEmail: workOrderData.tenant?.email || workOrderData.email,
 
-        pmName: workOrderData.propertyManager?.name,
-        pmEmail: workOrderData.propertyManager?.email,
+        pmName: workOrderData.propertyManager?.name || workOrderData.pmName,
+        pmEmail: workOrderData.propertyManager?.email || workOrderData.pmEmail,
 
-        propertyAddress: workOrderData.property?.address || workOrderData.propertyAddress || 'Unknown',
-        keyNumber: workOrderData.property?.keyNumber,
+        propertyAddress: workOrderData.property?.address || workOrderData.address || 'Unknown',
+        keyNumber: workOrderData.property?.keyNumber || workOrderData.keyNumber,
 
-        issueTitle: workOrderData.issue?.title || workOrderData.jobName || 'Unknown',
-        issueDescription: workOrderData.issue?.description,
-        priority: workOrderData.issue?.priority || 'medium',
+        issueTitle: workOrderData.issue?.title || workOrderData.issue || workOrderData.jobName || 'Unknown',
+        issueDescription: workOrderData.issue?.description || workOrderData.issueDescription,
+        priority: workOrderData.issue?.priority || workOrderData.priority || 'medium',
 
         status: (workOrderData.simpro?.jobId || workOrderData.jobId) ? 'job_created' : 'scraped',
 
