@@ -45,8 +45,13 @@ export async function triggerWorkOrderProcessing() {
     const savedWorkOrders = [];
 
     console.log(`📥 Received ${workOrdersArray.length} work orders from n8n`);
+    console.log('First item keys:', Object.keys(workOrdersArray[0] || {}));
+    console.log('First item sample:', JSON.stringify(workOrdersArray[0], null, 2).substring(0, 500));
 
-    for (const workOrderData of workOrdersArray) {
+    for (const workOrderItem of workOrdersArray) {
+      // Unwrap n8n item structure (data is in .json property)
+      const workOrderData = workOrderItem.json || workOrderItem;
+
       console.log('Processing:', workOrderData.externalId, 'Customer:', workOrderData.tenant?.name);
       // Save each work order to database
       const [savedWorkOrder] = await db
