@@ -36,24 +36,32 @@ export async function triggerWorkOrderProcessing() {
     }
 
     // Get work order data from n8n response
-    const workOrderData = await response.json();
+    const responseData = await response.json();
 
     console.log('✅ n8n workflow completed, received data');
 
-    // Save work order to database
-    const [savedWorkOrder] = await db
-      .insert(workOrders)
-      .values({
+    // Handle both single object and array of work orders
+    const workOrdersArray = Array.isArray(responseData) ? responseData : [responseData];
+    const savedWorkOrders = [];
+
+    console.log(`📥 Received ${workOrdersArray.length} work orders from n8n`);
+
+    for (const workOrderData of workOrdersArray) {
+      console.log('Processing:', workOrderData.externalId, 'Customer:', workOrderData.tenant?.name);
+      // Save each work order to database
+      const [savedWorkOrder] = await db
+        .insert(workOrders)
+        .values({
         teamId: DEFAULT_TEAM_ID,
 
         workOrderId: workOrderData.workOrderId || workOrderData.jobName || 'UNKNOWN',
         externalId: workOrderData.externalId || workOrderData.jobName || 'UNKNOWN',
         pmPlatform: workOrderData.pmPlatform || 'Tapi',
 
-        simproJobId: workOrderData.simpro?.jobId || workOrderData.jobId,
-        simproCustomerId: workOrderData.simpro?.customerId || workOrderData.customerId?.ID,
+        simproJobId: parseInt(workOrderData.simpro?.jobId || workOrderData.jobId) || null,
+        simproCustomerId: parseInt(workOrderData.simpro?.customerId || workOrderData.customerId?.ID) || null,
         simproCustomerName: workOrderData.simpro?.customerName || workOrderData.customerId?.CompanyName,
-        simproSiteId: workOrderData.simpro?.siteId || workOrderData.siteId?.ID,
+        simproSiteId: parseInt(workOrderData.simpro?.siteId || workOrderData.siteId?.ID) || null,
         simproSiteName: workOrderData.simpro?.siteName || workOrderData.siteId?.Name,
         simproStage: workOrderData.simpro?.stage || workOrderData.stage,
         simproJobUrl: (workOrderData.simpro?.jobId || workOrderData.jobId)
@@ -87,24 +95,29 @@ export async function triggerWorkOrderProcessing() {
       })
       .returning();
 
-    // Log activity
-    await db.insert(activityLogs).values({
-      teamId: DEFAULT_TEAM_ID,
-      userId: user.id,
-      action: ActivityType.WORK_ORDER_RECEIVED,
-      timestamp: new Date(),
-      ipAddress: 'manual-trigger',
-    });
+      // Log activity for this work order
+      await db.insert(activityLogs).values({
+        teamId: DEFAULT_TEAM_ID,
+        userId: user.id,
+        action: ActivityType.WORK_ORDER_RECEIVED,
+        timestamp: new Date(),
+        ipAddress: 'manual-trigger',
+      });
 
-    console.log('✅ Work order saved:', savedWorkOrder.id);
+      console.log('✅ Work order saved:', savedWorkOrder.id, savedWorkOrder.externalId);
+      savedWorkOrders.push(savedWorkOrder);
+    }
+
+    console.log(`✅ Processed ${savedWorkOrders.length} work orders`);
 
     return {
       success: true,
-      data: {
-        id: savedWorkOrder.id,
-        workOrderId: savedWorkOrder.workOrderId,
-        externalId: savedWorkOrder.externalId,
-      },
+      count: savedWorkOrders.length,
+      data: savedWorkOrders.map(wo => ({
+        id: wo.id,
+        workOrderId: wo.workOrderId,
+        externalId: wo.externalId,
+      })),
     };
   } catch (error) {
     console.error('❌ Error:', error);
