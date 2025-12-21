@@ -76,6 +76,7 @@ export async function triggerWorkOrderProcessing() {
       const workOrderData = workOrderItem.json || workOrderItem;
 
       console.log('Processing:', workOrderData.externalId, 'Customer:', workOrderData.tenant?.name);
+      console.log('Simpro Job ID:', workOrderData.simpro?.jobId, 'Type:', typeof workOrderData.simpro?.jobId);
       // Save each work order to database
       const [savedWorkOrder] = await db
         .insert(workOrders)
@@ -86,7 +87,9 @@ export async function triggerWorkOrderProcessing() {
         externalId: workOrderData.externalId || workOrderData.jobName || 'UNKNOWN',
         pmPlatform: workOrderData.pmPlatform || 'Tapi',
 
-        simproJobId: parseInt(workOrderData.simpro?.jobId || workOrderData.jobId) || null,
+        simproJobId: workOrderData.simpro?.jobId
+          ? (typeof workOrderData.simpro.jobId === 'string' ? parseInt(workOrderData.simpro.jobId) : workOrderData.simpro.jobId)
+          : (workOrderData.jobId ? (typeof workOrderData.jobId === 'string' ? parseInt(workOrderData.jobId) : workOrderData.jobId) : null),
         simproCustomerId: parseInt(workOrderData.simpro?.customerId || workOrderData.customerId?.ID) || null,
         simproCustomerName: workOrderData.simpro?.customerName || workOrderData.customerId?.CompanyName,
         simproSiteId: parseInt(workOrderData.simpro?.siteId || workOrderData.siteId?.ID) || null,
