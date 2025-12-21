@@ -76,8 +76,21 @@ export async function triggerWorkOrderProcessing() {
       const workOrderData = workOrderItem.json || workOrderItem;
 
       console.log('Processing:', workOrderData.externalId, 'Customer:', workOrderData.tenant?.name);
+      console.log('Simpro data:', JSON.stringify(workOrderData.simpro, null, 2));
       console.log('Simpro Job ID:', workOrderData.simpro?.jobId, 'Type:', typeof workOrderData.simpro?.jobId);
-      // Save each work order to database
+
+      // Check if work order with this externalId already exists
+      const existing = await db.query.workOrders.findFirst({
+        where: (workOrders, { eq }) => eq(workOrders.externalId, workOrderData.externalId),
+      });
+
+      if (existing) {
+        console.log(`⚠️ Work order ${workOrderData.externalId} already exists (ID: ${existing.id}), skipping...`);
+        savedWorkOrders.push(existing);
+        continue;
+      }
+
+      // Save new work order to database
       const [savedWorkOrder] = await db
         .insert(workOrders)
         .values({
