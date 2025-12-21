@@ -8,16 +8,19 @@ import { triggerWorkOrderProcessing } from '@/app/(dashboard)/actions';
 export function ProcessWorkOrdersButton() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [processedCount, setProcessedCount] = useState(0);
 
   const handleProcess = async () => {
     setIsProcessing(true);
     setStatus('idle');
+    setProcessedCount(0);
 
     try {
       const result = await triggerWorkOrderProcessing();
 
       if (result.success) {
         setStatus('success');
+        setProcessedCount(result.count || 1);
         // Refresh page after 2 seconds to show new work orders
         setTimeout(() => {
           window.location.reload();
@@ -50,7 +53,7 @@ export function ProcessWorkOrdersButton() {
         ) : status === 'success' ? (
           <>
             <CheckCircle className="h-4 w-4" />
-            Success!
+            {processedCount > 1 ? `${processedCount} Work Orders Processed!` : 'Success!'}
           </>
         ) : status === 'error' ? (
           <>
