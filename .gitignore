@@ -43,3 +43,6 @@ postgres_data/
 # MCP Server Configurations
 .mcp_*.json
 PRODUCTION_CREDENTIALS.md
+
+# Local Netlify folder
+.netlify
