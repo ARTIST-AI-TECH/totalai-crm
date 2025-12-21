@@ -37,15 +37,12 @@ export function WorkOrderCard({ order, isSelected, onClick }: WorkOrderCardProps
 
       <div className={cn('pl-3', isUnread && 'pl-5')}>
         {/* Header row */}
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-2">
-            <span className={cn('text-sm', isUnread ? 'font-bold' : 'font-medium')}>
-              {order.customer}
-            </span>
-            <span className="text-xs text-muted-foreground">•</span>
-            <span className="font-mono text-xs text-muted-foreground">{order.id}</span>
-          </div>
-          <span className="text-xs text-muted-foreground">{formatTime(order.receivedAt)}</span>
+        <div className="flex items-center gap-2 mb-1">
+          <span className={cn('text-sm', isUnread ? 'font-bold' : 'font-medium')}>
+            {order.customer}
+          </span>
+          <span className="text-xs text-muted-foreground">•</span>
+          <span className="font-mono text-xs text-muted-foreground">{order.id}</span>
         </div>
 
         {/* Issue/Subject */}
@@ -55,19 +52,21 @@ export function WorkOrderCard({ order, isSelected, onClick }: WorkOrderCardProps
 
         {/* Meta info row */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span>{statusText[order.status]}</span>
+            <span>•</span>
+            <span>{order.address.split(',')[0]}</span>
             {order.assignedTo && (
               <>
                 <span>•</span>
                 <span>{order.assignedTo}</span>
               </>
             )}
-            <span>•</span>
-            <span>{order.address.split(',')[0]}</span>
           </div>
-          <span className={cn('text-foreground', isUnread && 'font-semibold')}>
-            {formatCurrency(order.estimatedValue)}
+          <span className="text-xs text-muted-foreground">
+            {(order as any).jobCreatedAt
+              ? formatTime((order as any).jobCreatedAt)
+              : formatTime(order.receivedAt)}
           </span>
         </div>
       </div>
