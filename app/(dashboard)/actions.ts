@@ -36,17 +36,40 @@ export async function triggerWorkOrderProcessing() {
     }
 
     // Get work order data from n8n response
-    const responseData = await response.json();
+    const responseText = await response.text();
+    console.log('📥 Raw response (first 200 chars):', responseText.substring(0, 200));
+
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('❌ JSON parse error:', parseError);
+      console.log('Response text:', responseText);
+      throw new Error('Invalid JSON response from n8n');
+    }
 
     console.log('✅ n8n workflow completed, received data');
+    console.log('Response keys:', Object.keys(responseData));
 
-    // Handle both single object and array of work orders
-    const workOrdersArray = Array.isArray(responseData) ? responseData : [responseData];
+    // Extract work orders array from response
+    let workOrdersData = responseData.workorders || responseData.workOrders || responseData;
+
+    // Check if workOrders is stringified
+    if (typeof workOrdersData === 'string') {
+      console.log('⚠️ workOrders is stringified, parsing...');
+      workOrdersData = JSON.parse(workOrdersData);
+    }
+
+    // Handle both single object and array
+    const workOrdersArray = Array.isArray(workOrdersData) ? workOrdersData : [workOrdersData];
+
+    console.log(`📥 Received ${workOrdersArray.length} work orders`);
+    if (workOrdersArray[0]) {
+      console.log('First item keys:', Object.keys(workOrdersArray[0]));
+      console.log('First item preview:', JSON.stringify(workOrdersArray[0], null, 2).substring(0, 500));
+    }
+
     const savedWorkOrders = [];
-
-    console.log(`📥 Received ${workOrdersArray.length} work orders from n8n`);
-    console.log('First item keys:', Object.keys(workOrdersArray[0] || {}));
-    console.log('First item sample:', JSON.stringify(workOrdersArray[0], null, 2).substring(0, 500));
 
     for (const workOrderItem of workOrdersArray) {
       // Unwrap n8n item structure (data is in .json property)

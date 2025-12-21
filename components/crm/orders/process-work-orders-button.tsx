@@ -11,27 +11,32 @@ export function ProcessWorkOrdersButton() {
   const [processedCount, setProcessedCount] = useState(0);
 
   const handleProcess = async () => {
+    console.log('🔵 UI: Starting work order processing...');
     setIsProcessing(true);
     setStatus('idle');
     setProcessedCount(0);
 
     try {
+      console.log('🔵 UI: Calling server action...');
       const result = await triggerWorkOrderProcessing();
+      console.log('🔵 UI: Server action returned:', result);
 
       if (result.success) {
+        console.log(`✅ UI: Success! Processed ${result.count || 1} work orders`);
         setStatus('success');
         setProcessedCount(result.count || 1);
         // Refresh page after 2 seconds to show new work orders
         setTimeout(() => {
+          console.log('🔄 UI: Refreshing page...');
           window.location.reload();
         }, 2000);
       } else {
+        console.error('❌ UI: Error:', result.error);
         setStatus('error');
-        console.error('Error:', result.error);
       }
     } catch (error) {
+      console.error('❌ UI: Exception:', error);
       setStatus('error');
-      console.error('Error triggering workflow:', error);
     } finally {
       setIsProcessing(false);
     }
