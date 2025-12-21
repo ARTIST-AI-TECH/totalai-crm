@@ -3,8 +3,8 @@ import { users, teams, teamMembers } from '../lib/db/schema';
 import { hashPassword } from '../lib/auth/session';
 
 async function createProductionUser() {
-  const email = 'admin@flowcontrol.app';
-  const password = 'FlowPro2025!Secure#PPG';
+  const email = 'selva@totalai.com.au';
+  const password = '@Totalai123';
 
   console.log('🔐 Creating production user...');
   console.log('Email:', email);
