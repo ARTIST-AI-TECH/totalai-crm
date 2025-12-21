@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "n8n-mcp": {
+      "command": "npx",
+      "args": ["n8n-mcp"],
+      "env": {
+        "MCP_MODE": "stdio",
+        "LOG_LEVEL": "error",
+        "DISABLE_CONSOLE_OUTPUT": "true",
+        "N8N_API_URL": "https://n8n-totalai-au.badou.ai",
+        "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNGU3ZmJlYS02MzUyLTQ4NWItYTkwMy1hNzcxZDI4NzBiZjYiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0ODY1NTI5LCJleHAiOjE3NzI2MjkyMDB9.mHpcBgDL3IPCOTFceBwuG6iETdbT2KdEowo9z7n2uTU"
+      }
+    }
+  }
+}
