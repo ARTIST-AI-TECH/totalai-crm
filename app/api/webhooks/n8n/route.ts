@@ -23,6 +23,8 @@ export async function POST(req: NextRequest) {
       simproJobId: payload.simpro?.jobId
     });
 
+    console.log('📦 Full payload:', JSON.stringify(payload, null, 2));
+
     // 3. Check for duplicate by externalId
     const existingWorkOrder = await db.query.workOrders.findFirst({
       where: (workOrders, { eq }) => eq(workOrders.externalId, payload.externalId),
