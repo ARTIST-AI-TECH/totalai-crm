@@ -1,56 +1,55 @@
-{                                                                                                                                                     
-    "workOrderId": $('Prep data for work order').item.json.workOrderId,                                                                        
-    "externalId": $('Prep data for work order').item.json.externalId,                                                                          
-    "pmPlatform": $('Prep data for work order').item.json.pmPlatform,                                                                          
-                                                                                                                                                        
-    "tenant": {                                                                                                                                         
-      "name": $('Prep data for work order').item.json.customer,                                                                                
-      "phone": $('Prep data for work order').item.json.phone,                                                                                  
-      "email": $('Prep data for work order').item.json.email                                                                                   
-    },                                                                                                                                                  
-                                                                                                                                                        
-    "property": {                                                                                                                                       
-      "address": $('Prep data for work order').item.json.address,                                                                              
-      "keyNumber": $('Prep data for work order').item.json.keyNumber                                                                           
-    },                                                                                                                                                  
-                                                                                                                                                        
-    "issue": {                                                                                                                                          
-      "title": $('Prep data for work order').item.json.issue,                                                                                  
-      "description": $('Prep data for work order').item.json.issueDescription,                                                                 
-      "priority": $('Prep data for work order').item.json.priority                                                                             
-    },                                                                                                                                                  
-                                                                                                                                                        
-    "propertyManager": {                                                                                                                                
-      "name": $('Prep data for work order').item.json.pmName,                                                                                  
-      "email": $('Prep data for work order').item.json.pmEmail                                                                                 
-    },                                                                                                                                                  
-                                                                                                                                                        
-    "simpro": {                                                                                                                                         
-      "jobId": $('🏭 Create Job').item.json.ID,                                                                                         
-      "customerId": $('🏭 Create Job').item.json.Customer.ID,                                                                           
-      "customerName": $('🏭 Create Job').item.json.Customer.CompanyName,                                                                
-      "siteId": $('🏭 Create Job').item.json.Site.ID,                                                                                   
-      "siteName": $('🏭 Create Job').item.json.Site.Name,                                                                               
-      "stage": $('🏭 Create Job').item.json.Stage,                                                                                      
-      "status": $('🏭 Create Job').item.json.Status                                                                                     
-    },                                                                                                                                                  
-                                                                                                                                                        
-    "attachments": {                                                                                                                                    
-      "pdfFileName": $('Prep data for work order').item.json.pdfFileName,                                                                      
-      "pdfAttachmentId": $('📎 Attach PDF to Job').item.json.ID                                                                                
-    },                                                                                                                                                  
-                                                                                                                                                        
-    "timestamps": {                                                                                                                                     
-      "receivedAt": $('Prep data for work order').item.json.receivedAt,                                                                        
-      "scrapedAt": new Date().toISOString(),                                                                                                   
-      "jobCreatedAt": $('🏭 Create Job').item.json.DateModified,                                                                        
-      "submittedDate": $('Prep data for work order').item.json.submittedDate                                                                   
-    },                                                                                                                                                  
-                                                                                                                                                        
-    "sourceUrl": $('Prep data for work order').item.json.sourceUrl,                                                                            
-    "emailSender": $('Prep data for work order').item.json.emailSender,                                                                        
-    "emailSubject": $('Prep data for work order').item.json.emailSubject,                                                                      
-                                                                                                                                                        
-    "createdJob": $('🏭 Create Job').item.json,                                                                                         
-    "_raw": $('Prep data for work order').item.json                                                                                            
-  }                     
+const items = $input.all();                                                                  
+                                                                                               
+  return items.map(item => {                                                                   
+    const prep = item.json.Prep_data_for_work_order_ || item.json;                             
+                                                                                               
+    return {                                                                                   
+      json: {                                                                                  
+        workOrderId: prep.workOrderId,                                                         
+        externalId: prep.externalId,                                                           
+        pmPlatform: prep.pmPlatform,                                                           
+                                                                                               
+        tenant: {                                                                              
+          name: prep.customer,                                                                 
+          phone: prep.phone,                                                                   
+          email: prep.email
+            },                                                                                     
+                                                                                               
+        property: {                                                                            
+          address: prep.address,                                                               
+          keyNumber: prep.keyNumber
+            },                                                                                     
+                                                                                               
+        issue: {                                                                               
+          title: prep.issue,                                                                   
+          description: prep.issueDescription,                                                  
+          priority: prep.priority
+            },                                                                                     
+                                                                                               
+        propertyManager: {                                                                     
+          name: prep.pmName,                                                                   
+          email: prep.pmEmail
+            },                                                                                     
+                                                                                               
+        simpro: {                                                                              
+          jobId: item.json.ID || item.json.jobId,                                              
+          customerId: item.json.Customer_ID,                                                   
+          customerName: item.json.Customer_CompanyName,                                        
+          siteId: item.json.Site_ID,                                                           
+          siteName: item.json.Site_Name,                                                       
+          stage: item.json.Stage
+            },                                                                                     
+                                                                                               
+        attachments: {                                                                         
+          pdfFileName: prep.pdfFileName,                                                       
+          pdfAttachmentId: item.json._Attach_PDF_to_Job_ID
+            },                                                                                     
+                                                                                               
+        timestamps: {                                                                          
+          receivedAt: prep.receivedAt,                                                         
+          scrapedAt: new Date().toISOString(),                                                 
+          jobCreatedAt: item.json.DateModified
+            }
+        }
+    };
+});                          

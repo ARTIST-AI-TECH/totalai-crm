@@ -25,11 +25,8 @@ export function ProcessWorkOrdersButton() {
         console.log(`✅ UI: Success! Processed ${result.count || 1} work orders`);
         setStatus('success');
         setProcessedCount(result.count || 1);
-        // Refresh page after 2 seconds to show new work orders
-        setTimeout(() => {
-          console.log('🔄 UI: Refreshing page...');
-          window.location.reload();
-        }, 2000);
+        // No reload needed - Realtime handles updates!
+        setTimeout(() => setStatus('idle'), 3000);
       } else {
         console.error('❌ UI: Error:', result.error);
         setStatus('error');
@@ -72,12 +69,6 @@ export function ProcessWorkOrdersButton() {
           </>
         )}
       </Button>
-
-      {status === 'success' && (
-        <span className="text-sm text-muted-foreground">
-          Refreshing dashboard...
-        </span>
-      )}
     </div>
   );
 }
