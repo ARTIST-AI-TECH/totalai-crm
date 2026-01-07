@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Stop and remove existing n8n container
+docker stop n8n
+docker rm n8n
+
+# Start n8n with all environment variables including new CRM webhook settings
+docker run -d \
+  --name n8n \
+  --network n8n_n8n-network \
+  --cap-add=SYS_ADMIN \
+  --ipc=host \
+  -p 127.0.0.1:5678:5678 \
+  -v n8n_n8n-data:/home/node/.n8n \
+  -e N8N_HOST=n8n-totalai-au.badou.ai \
+  -e N8N_BASIC_AUTH_ACTIVE=true \
+  -e N8N_PORT=5678 \
+  -e DB_POSTGRESDB_PASSWORD='@19Tru3Gl0bal28!' \
+  -e N8N_PROTOCOL=https \
+  -e EXECUTIONS_DATA_SAVE_ON_ERROR=all \
+  -e DB_POSTGRESDB_DATABASE=n8n \
+  -e EXECUTIONS_DATA_SAVE_ON_SUCCESS=all \
+  -e GENERIC_TIMEZONE=Australia/Sydney \
+  -e DB_TYPE=postgresdb \
+  -e N8N_BASIC_AUTH_USER=n8n-admin \
+  -e EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS=true \
+  -e TZ=Australia/Sydney \
+  -e DB_POSTGRESDB_PORT=5432 \
+  -e DB_POSTGRESDB_HOST=postgres \
+  -e WEBHOOK_URL=https://n8n-totalai-au.badou.ai/ \
+  -e DB_POSTGRESDB_USER=n8n \
+  -e N8N_BASIC_AUTH_PASSWORD='@19TGl0bal18!' \
+  -e CRM_WEBHOOK_URL=https://flowpro-totalai.netlify.app \
+  -e N8N_WEBHOOK_SECRET=ce1e6ea232cf2523a719c5f0442f4e126252cb6432fd0d934a353543abafffb5 \
+  n8n-puppeteer
+
+echo "✅ n8n container restarted successfully!"
+echo "CRM Webhook URL: https://flowpro-totalai.netlify.app"
+echo "Webhook Secret: ce1e6ea232cf2523a719c5f0442f4e126252cb6432fd0d934a353543abafffb5"
