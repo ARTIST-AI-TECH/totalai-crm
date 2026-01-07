@@ -15,15 +15,18 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Parse payload
-    const payload = await req.json();
+    let payload = await req.json();
+
+    // Unwrap if data is nested in JSON property (from n8n)
+    if (payload.JSON && typeof payload.JSON === 'object') {
+      payload = payload.JSON;
+    }
 
     console.log('📥 Webhook received:', {
       workOrderId: payload.workOrderId,
       externalId: payload.externalId,
       simproJobId: payload.simpro?.jobId
     });
-
-    console.log('📦 Full payload:', JSON.stringify(payload, null, 2));
 
     // 3. Check for duplicate by externalId
     const existingWorkOrder = await db.query.workOrders.findFirst({
