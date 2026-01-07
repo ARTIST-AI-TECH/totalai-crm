@@ -23,7 +23,26 @@ export async function POST(req: NextRequest) {
       simproJobId: payload.simpro?.jobId
     });
 
-    // 3. Insert work order
+    // 3. Check for duplicate by externalId
+    const existingWorkOrder = await db.query.workOrders.findFirst({
+      where: (workOrders, { eq }) => eq(workOrders.externalId, payload.externalId),
+    });
+
+    if (existingWorkOrder) {
+      console.log(`⚠️ Duplicate work order: ${payload.externalId} (ID: ${existingWorkOrder.id})`);
+      return Response.json(
+        {
+          success: true,
+          duplicate: true,
+          workOrderId: existingWorkOrder.id,
+          externalId: existingWorkOrder.externalId,
+          message: 'Work order already exists',
+        },
+        { status: 200 }
+      );
+    }
+
+    // 4. Insert work order
     const [workOrder] = await db
       .insert(workOrders)
       .values({
@@ -92,7 +111,7 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    // 4. Log activity
+    // 5. Log activity
     await db.insert(activityLogs).values({
       teamId: DEFAULT_TEAM_ID,
       userId: null, // System action
@@ -107,7 +126,7 @@ export async function POST(req: NextRequest) {
       externalId: workOrder.externalId
     });
 
-    // 5. Return success
+    // 6. Return success
     return Response.json(
       {
         success: true,

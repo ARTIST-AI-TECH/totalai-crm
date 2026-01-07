@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { supabase } from '@/lib/supabase/client';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { OrderFilters } from '@/components/crm/orders/order-filters';
 import { WorkOrderList } from '@/components/crm/orders/work-order-list';
 import { WorkOrderDetail } from '@/components/crm/orders/work-order-detail';
@@ -70,6 +72,61 @@ export function WorkOrdersClient({ initialWorkOrders, initialStats, technicians 
     type: 'success' | 'error' | 'info';
     message: string;
   } | null>(null);
+
+  // Track subscription channel for cleanup
+  const channelRef = useRef<RealtimeChannel | null>(null);
+
+  // Get team ID from initial data
+  const teamId = initialWorkOrders[0]?.teamId || 1;
+
+  // Set up Realtime subscription
+  useEffect(() => {
+    console.log('🔵 Setting up Realtime subscription for team:', teamId);
+
+    const channel = supabase
+      .channel('work-orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'work_orders',
+          filter: `team_id=eq.${teamId}`,
+        },
+        (payload) => {
+          console.log('🟢 New work order via Realtime:', payload.new);
+
+          // Convert DB format to UI format
+          const newWorkOrder = convertToUIWorkOrder(payload.new);
+
+          // Add to top of list
+          setWorkOrders((prev) => [newWorkOrder, ...prev]);
+
+          // Show notification
+          setNotification({
+            type: 'info',
+            message: `New work order: ${newWorkOrder.id}`,
+          });
+
+          // Auto-select if none selected
+          if (!selectedOrderId) {
+            setSelectedOrderId(newWorkOrder.id);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Realtime status:', status);
+      });
+
+    channelRef.current = channel;
+
+    return () => {
+      console.log('🔴 Cleaning up Realtime subscription');
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
+    };
+  }, [teamId]);
 
   const selectedOrder = workOrders.find((order) => order.id === selectedOrderId) || null;
 
