@@ -1,11 +1,10 @@
 'use server';
 
-import { getUser } from '@/lib/db/queries';
+import { getUser, getTeamForUser } from '@/lib/db/queries';
 import { db } from '@/lib/db/drizzle';
 import { workOrders, activityLogs, ActivityType } from '@/lib/db/schema';
 
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || 'https://n8n-totalai-au.badou.ai/webhook/crm-trigger';
-const DEFAULT_TEAM_ID = 1;
 
 export async function triggerWorkOrderProcessing() {
   try {
@@ -14,7 +13,12 @@ export async function triggerWorkOrderProcessing() {
       return { success: false, error: 'Not authenticated' };
     }
 
-    console.log('🎯 Triggering n8n workflow for user:', user.email);
+    const team = await getTeamForUser();
+    if (!team) {
+      return { success: false, error: 'No team found' };
+    }
+
+    console.log('🎯 Triggering n8n workflow for user:', user.email, 'team:', team.id);
 
     // Call n8n webhook directly (not through local API)
     const response = await fetch(N8N_WEBHOOK_URL, {
@@ -94,7 +98,7 @@ export async function triggerWorkOrderProcessing() {
       const [savedWorkOrder] = await db
         .insert(workOrders)
         .values({
-        teamId: DEFAULT_TEAM_ID,
+        teamId: team.id,
 
         workOrderId: workOrderData.workOrderId || workOrderData.jobName || 'UNKNOWN',
         externalId: workOrderData.externalId || workOrderData.jobName || 'UNKNOWN',
@@ -141,7 +145,7 @@ export async function triggerWorkOrderProcessing() {
 
       // Log activity for this work order
       await db.insert(activityLogs).values({
-        teamId: DEFAULT_TEAM_ID,
+        teamId: team.id,
         userId: user.id,
         action: ActivityType.WORK_ORDER_RECEIVED,
         timestamp: new Date(),
