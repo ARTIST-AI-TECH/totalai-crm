@@ -9,6 +9,15 @@ export async function POST(req: NextRequest) {
   try {
     // 1. Validate webhook secret
     const authHeader = req.headers.get('x-crm-webhook-secret');
+
+    // Debug logging
+    console.log('🔐 Auth Debug:', {
+      receivedHeader: authHeader?.substring(0, 20) + '...',
+      expectedSecret: WEBHOOK_SECRET?.substring(0, 20) + '...',
+      envVarExists: !!process.env.N8N_WEBHOOK_SECRET,
+      match: authHeader === WEBHOOK_SECRET
+    });
+
     if (authHeader !== WEBHOOK_SECRET) {
       console.error('Unauthorized webhook attempt');
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
