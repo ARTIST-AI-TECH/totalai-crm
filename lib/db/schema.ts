@@ -154,6 +154,10 @@ export const workOrders = pgTable('work_orders', {
   assignedTo: integer('assigned_to').references(() => technicians.id),
   scheduledFor: timestamp('scheduled_for'),
 
+  // TAPI Acceptance
+  tapiAccepted: boolean('tapi_accepted').default(false),
+  tapiAcceptedAt: timestamp('tapi_accepted_at'),
+
   // Metadata
   isRead: boolean('is_read').default(false),
   rawData: jsonb('raw_data'),

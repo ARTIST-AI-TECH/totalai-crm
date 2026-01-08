@@ -120,6 +120,12 @@ export async function POST(req: NextRequest) {
           ? new Date(payload.timestamps.jobCreatedAt)
           : null,
 
+        // TAPI Acceptance
+        tapiAccepted: payload.acceptance?.accepted || false,
+        tapiAcceptedAt: payload.acceptance?.acceptedAt
+          ? new Date(payload.acceptance.acceptedAt)
+          : null,
+
         // Metadata
         rawData: payload,
       })
