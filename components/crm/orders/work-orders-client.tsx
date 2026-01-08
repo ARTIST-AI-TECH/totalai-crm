@@ -15,30 +15,37 @@ import { WorkOrder } from '@/lib/crm/types';
 
 // Convert database work order to UI work order type
 function convertToUIWorkOrder(dbOrder: any): WorkOrder {
+  // Helper to convert timestamp to ISO string (handles both Date objects and strings)
+  const toISOString = (value: any) => {
+    if (!value) return null;
+    if (typeof value === 'string') return value;
+    return value.toISOString();
+  };
+
   return {
-    id: dbOrder.externalId, // Use TAPI ID for customer-facing display
-    customer: dbOrder.tenantName || 'Unknown',
-    address: dbOrder.propertyAddress,
+    id: dbOrder.externalId || dbOrder.external_id, // Handle both camelCase and snake_case
+    customer: dbOrder.tenantName || dbOrder.tenant_name || 'Unknown',
+    address: dbOrder.propertyAddress || dbOrder.property_address || '',
     lat: 0, // TODO: Geocode address
     lng: 0, // TODO: Geocode address
-    phone: dbOrder.tenantPhone || '',
-    email: dbOrder.tenantEmail || '',
-    issue: dbOrder.issueTitle,
+    phone: dbOrder.tenantPhone || dbOrder.tenant_phone || '',
+    email: dbOrder.tenantEmail || dbOrder.tenant_email || '',
+    issue: dbOrder.issueTitle || dbOrder.issue_title || '',
     priority: dbOrder.priority as any,
     status: dbOrder.status as any,
-    source: dbOrder.pmPlatform || 'Email',
-    receivedAt: dbOrder.receivedAt.toISOString(),
-    scheduledFor: dbOrder.scheduledFor ? dbOrder.scheduledFor.toISOString() : null,
-    completedAt: dbOrder.completedAt?.toISOString(),
+    source: dbOrder.pmPlatform || dbOrder.pm_platform || 'Email',
+    receivedAt: toISOString(dbOrder.receivedAt || dbOrder.received_at) || new Date().toISOString(),
+    scheduledFor: toISOString(dbOrder.scheduledFor || dbOrder.scheduled_for),
+    completedAt: toISOString(dbOrder.completedAt || dbOrder.completed_at),
     assignedTo: dbOrder.assignedTechnician?.name,
-    estimatedValue: dbOrder.estimatedValue ? Number(dbOrder.estimatedValue) : 0,
-    actualValue: dbOrder.actualValue ? Number(dbOrder.actualValue) : 0,
-    notes: dbOrder.issueDescription,
-    isRead: dbOrder.isRead || false,
-    // Add Simpro metadata for display
-    simproJobUrl: dbOrder.simproJobUrl,
-    simproJobId: dbOrder.simproJobId,
-    jobCreatedAt: dbOrder.jobCreatedAt,
+    estimatedValue: dbOrder.estimatedValue || dbOrder.estimated_value ? Number(dbOrder.estimatedValue || dbOrder.estimated_value) : 0,
+    actualValue: dbOrder.actualValue || dbOrder.actual_value ? Number(dbOrder.actualValue || dbOrder.actual_value) : 0,
+    notes: dbOrder.issueDescription || dbOrder.issue_description,
+    isRead: dbOrder.isRead || dbOrder.is_read || false,
+    // Add Simpro metadata for display (handle both formats)
+    simproJobUrl: dbOrder.simproJobUrl || dbOrder.simpro_job_url,
+    simproJobId: dbOrder.simproJobId || dbOrder.simpro_job_id,
+    jobCreatedAt: dbOrder.jobCreatedAt || dbOrder.job_created_at,
   };
 }
 
