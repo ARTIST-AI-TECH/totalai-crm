@@ -96,21 +96,25 @@ export function WorkOrdersClient({ initialWorkOrders, initialStats, technicians 
         (payload) => {
           console.log('🟢 New work order via Realtime:', payload.new);
 
-          // Convert DB format to UI format
-          const newWorkOrder = convertToUIWorkOrder(payload.new);
+          try {
+            // Convert DB format to UI format
+            const newWorkOrder = convertToUIWorkOrder(payload.new);
 
-          // Add to top of list
-          setWorkOrders((prev) => [newWorkOrder, ...prev]);
+            // Add to top of list
+            setWorkOrders((prev) => [newWorkOrder, ...prev]);
 
-          // Show notification
-          setNotification({
-            type: 'info',
-            message: `New work order: ${newWorkOrder.id}`,
-          });
+            // Show notification
+            setNotification({
+              type: 'info',
+              message: `New work order: ${newWorkOrder.id}`,
+            });
 
-          // Auto-select if none selected
-          if (!selectedOrderId) {
-            setSelectedOrderId(newWorkOrder.id);
+            // Auto-select if none selected
+            if (!selectedOrderId) {
+              setSelectedOrderId(newWorkOrder.id);
+            }
+          } catch (error) {
+            console.error('❌ Error processing Realtime event:', error);
           }
         }
       )
