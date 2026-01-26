@@ -37,6 +37,8 @@ export async function POST(req: NextRequest) {
       simproJobId: payload.simpro?.jobId
     });
 
+    console.log('📦 Full payload keys:', Object.keys(payload));
+
     // 3. Check for duplicate by externalId
     const existingWorkOrder = await db.query.workOrders.findFirst({
       where: (workOrders, { eq }) => eq(workOrders.externalId, payload.externalId),
@@ -57,7 +59,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Insert work order
-    const [workOrder] = await db
+    let workOrder;
+    try {
+      [workOrder] = await db
       .insert(workOrders)
       .values({
         teamId: DEFAULT_TEAM_ID,
@@ -136,6 +140,11 @@ export async function POST(req: NextRequest) {
         rawData: payload,
       })
       .returning();
+    } catch (insertError) {
+      console.error('❌ Database insert failed:', insertError);
+      console.log('Payload that caused error:', JSON.stringify(payload, null, 2));
+      throw insertError;
+    }
 
     // 5. Log activity
     await db.insert(activityLogs).values({
