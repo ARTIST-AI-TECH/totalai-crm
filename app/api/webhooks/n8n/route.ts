@@ -67,13 +67,19 @@ export async function POST(req: NextRequest) {
         externalId: payload.externalId,
         pmPlatform: payload.pmPlatform,
 
-        // Simpro Data
-        simproJobId: payload.simpro?.jobId,
-        simproCustomerId: payload.simpro?.customerId,
-        simproCustomerName: payload.simpro?.customerName,
-        simproSiteId: payload.simpro?.siteId,
-        simproSiteName: payload.simpro?.siteName,
-        simproStage: payload.simpro?.stage,
+        // Simpro Data (parse string IDs to integers)
+        simproJobId: payload.simpro?.jobId
+          ? (typeof payload.simpro.jobId === 'string' ? parseInt(payload.simpro.jobId) : payload.simpro.jobId)
+          : null,
+        simproCustomerId: payload.simpro?.customerId
+          ? (typeof payload.simpro.customerId === 'string' ? parseInt(payload.simpro.customerId) : payload.simpro.customerId)
+          : null,
+        simproCustomerName: payload.simpro?.customerName || null,
+        simproSiteId: payload.simpro?.siteId
+          ? (typeof payload.simpro.siteId === 'string' ? parseInt(payload.simpro.siteId) : payload.simpro.siteId)
+          : null,
+        simproSiteName: payload.simpro?.siteName || null,
+        simproStage: payload.simpro?.stage || null,
         simproJobUrl: payload.simpro?.jobId
           ? `https://platinumplumbinggassolutions.simprosuite.com/staff/editProject.php?jobID=${payload.simpro.jobId}`
           : null,
@@ -103,11 +109,11 @@ export async function POST(req: NextRequest) {
         pdfFileName: payload.attachments?.pdfFileName,
         simproAttachmentId: payload.attachments?.pdfAttachmentId,
 
-        // Email Metadata
-        emailSender: payload.email?.sender,
-        emailSubject: payload.email?.subject,
-        emailMessageId: payload.email?.messageId,
-        sourceUrl: payload.sourceUrl,
+        // Email Metadata (fallback to smsDetails if email object missing)
+        emailSender: payload.email?.sender || payload.emailSender || 'hi@tapihq.com',
+        emailSubject: payload.email?.subject || payload.emailSubject || null,
+        emailMessageId: payload.email?.messageId || payload.emailMessageId || null,
+        sourceUrl: payload.sourceUrl || payload.acceptance?.tapiUrl || null,
 
         // Timestamps
         receivedAt: payload.timestamps?.receivedAt
