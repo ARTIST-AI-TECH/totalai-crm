@@ -141,6 +141,14 @@ export async function POST(req: NextRequest) {
           ? new Date(payload.acceptance.acceptedAt)
           : null,
 
+        // SMS Notification
+        smsSent: !!payload.smsDetails?.sid,
+        smsSid: payload.smsDetails?.sid || null,
+        smsStatus: payload.smsDetails?.status || null,
+        smsSentAt: payload.smsDetails?.date_created
+          ? new Date(payload.smsDetails.date_created)
+          : null,
+
         // Metadata
         rawData: payload,
       })

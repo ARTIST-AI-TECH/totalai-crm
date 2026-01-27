@@ -46,6 +46,10 @@ function convertToUIWorkOrder(dbOrder: any): WorkOrder {
     simproJobUrl: dbOrder.simproJobUrl || dbOrder.simpro_job_url,
     simproJobId: dbOrder.simproJobId || dbOrder.simpro_job_id,
     jobCreatedAt: dbOrder.jobCreatedAt || dbOrder.job_created_at,
+    // Add SMS metadata
+    smsSent: dbOrder.smsSent || dbOrder.sms_sent,
+    smsStatus: dbOrder.smsStatus || dbOrder.sms_status,
+    smsSentAt: dbOrder.smsSentAt || dbOrder.sms_sent_at,
   };
 }
 
