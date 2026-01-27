@@ -26,17 +26,18 @@ export async function POST(req: NextRequest) {
     // 2. Parse payload
     let payload = await req.json();
 
-    console.log('🔍 Before unwrap - keys:', Object.keys(payload));
-    console.log('🔍 Has JSON property?', !!payload.JSON);
-    console.log('🔍 JSON type:', typeof payload.JSON);
-
     // Unwrap if data is nested in JSON property (from n8n)
-    if (payload.JSON && typeof payload.JSON === 'object') {
-      console.log('📦 Unwrapping JSON property...');
-      payload = payload.JSON;
+    if (payload.JSON) {
+      // Handle both stringified and object JSON properties
+      if (typeof payload.JSON === 'string') {
+        console.log('📦 Parsing stringified JSON property...');
+        payload = JSON.parse(payload.JSON);
+      } else if (typeof payload.JSON === 'object') {
+        console.log('📦 Unwrapping JSON object property...');
+        payload = payload.JSON;
+      }
     }
 
-    console.log('📦 After unwrap - keys:', Object.keys(payload));
     console.log('📥 Webhook received:', {
       workOrderId: payload.workOrderId,
       externalId: payload.externalId,
