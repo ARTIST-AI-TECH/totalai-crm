@@ -158,6 +158,12 @@ export const workOrders = pgTable('work_orders', {
   tapiAccepted: boolean('tapi_accepted').default(false),
   tapiAcceptedAt: timestamp('tapi_accepted_at'),
 
+  // SMS Notification
+  smsSent: boolean('sms_sent').default(false),
+  smsSid: varchar('sms_sid', { length: 100 }),
+  smsStatus: varchar('sms_status', { length: 50 }),
+  smsSentAt: timestamp('sms_sent_at'),
+
   // Metadata
   isRead: boolean('is_read').default(false),
   rawData: jsonb('raw_data'),
