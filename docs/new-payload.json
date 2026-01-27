@@ -1,0 +1,69 @@
+{
+    "workOrderId": "WO-2026-644877",
+    "externalId": "TAPI-001681",
+    "pmPlatform": "Tapi",
+    "tenant": {
+        "name": "Eliana Stephanie Diaz Triana",
+        "phone": "0433 774 936",
+        "email": "diaztriana.27@gmail.com"
+    },
+    "property": {
+        "address": "12 Ashworth AV, St Clair, SA",
+        "keyNumber": "3318"
+    },
+    "issue": {
+        "title": "Leaking Sinks",
+        "description": "Description:\n“Kitchen and laundry sink leaking”\n\nLeak amount:\nConstant",
+        "priority": "high"
+    },
+    "propertyManager": {
+        "name": "Lucy Crouch",
+        "email": "lucyc@harrisre.com.au"
+    },
+    "simpro": {
+        "jobId": "55109",
+        "customerId": "3370",
+        "customerName": "Harris Property Management - Kent Town",
+        "siteId": "20938",
+        "siteName": "12 Ashworth Avenue, St Clair",
+        "stage": "Pending"
+    },
+    "attachments": {
+        "pdfFileName": "TAPI-001681.pdf",
+        "pdfAttachmentId": "9LM9r_ZkLs52d4KiS8Ed6F5NxZBZHfnHtZ9FKDVf-iY"
+    },
+    "timestamps": {
+        "receivedAt": "2026-01-26T22:19:03Z",
+        "scrapedAt": "2026-01-26T22:31:03.672Z",
+        "jobCreatedAt": "2026-01-27T09:00:46+10:30"
+    },
+    "acceptance": {
+        "accepted": true,
+        "acceptedAt": "2026-01-26T22:31:03.438Z",
+        "tapiUrl": "https://url6277.tapihq.com/ls/click?upn=u001.FDrmjlsXkL15ZRyTjPZRcEAR5crloXYftvq3Qf2mzaZ5nwv5UWQjlHKFUhGh2RwnMKbu6ma2sa-2FpFgUqi3tMVMYNNj7azBalmHkX-2B-2BaRIvP1OZMfD1Z-2Fuz026sv8S8qVJkIKbbDFSF7q6q-2BVIcNZP5joGN7cYgu7t3V0PKASpC0-3D4JPE_A3nRQoop3xGTTNLdbAlLJUXV19H0LGneCDRBv8lOjGKb-2BclI-2FqQArVfgTVTv8ELCyW-2F-2FRUgTppt3HunEGoO0sNjvN7XDxdenjZz38A7s2dGUmFHW7e7-2BgdB4GURIeSJjgJIiiR1zcmU-2FQ4SSi1gkzUs-2B4FxHQY0833EFwNSpNNcKiE7FjX844JZbICKg3VylHsYjplAwemI9ZiF8KM4O9lZ-2FRwW82zRXTya1o-2BLEotc-3D"
+    },
+    "smsDetails": {
+        "account_sid": "AC_REDACTED",
+        "api_version": "2010-04-01",
+        "body": "Hi Eliana Stephanie Diaz Triana, \nYour work order regarding a:\nLeaking Sinks\nhas been created for:\n12 Ashworth AV, St Clair, SA\nPlease call our office at 71320324 with ref number: TAPI-001681 to schedule the visit date.\nvia Flowpro (WO-2026-644877 ) - PPG",
+        "date_created": "Mon, 26 Jan 2026 22:31:05 +0000",
+        "date_sent": null,
+        "date_updated": "Mon, 26 Jan 2026 22:31:05 +0000",
+        "direction": "outbound-api",
+        "error_code": null,
+        "error_message": null,
+        "from": "+61485002575",
+        "messaging_service_sid": null,
+        "num_media": "0",
+        "num_segments": "2",
+        "price": null,
+        "price_unit": "USD",
+        "sid": "SM_REDACTED",
+        "status": "queued",
+        "subresource_uris": {
+            "media": "/2010-04-01/Accounts/AC_REDACTED/Messages/SM_REDACTED/Media.json"
+        },
+        "to": "+61XXXXXXXXX",
+        "uri": "/2010-04-01/Accounts/AC_REDACTED/Messages/SM_REDACTED.json"
+    }
+}
