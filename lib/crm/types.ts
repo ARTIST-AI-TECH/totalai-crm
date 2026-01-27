@@ -51,6 +51,10 @@ export interface WorkOrder {
   simproJobUrl?: string;
   simproJobId?: number;
   jobCreatedAt?: Date;
+  // SMS metadata
+  smsSent?: boolean;
+  smsStatus?: string;
+  smsSentAt?: Date | string;
 }
 
 export interface Technician {
