@@ -219,7 +219,18 @@ export function WorkOrderDetail({
                 <MessageSquare className="h-4 w-4" />
                 <span>SMS Notification</span>
               </div>
-              <p className="text-lg font-semibold text-green-600">✓ Sent</p>
+              <p className={`text-lg font-semibold ${
+                (order as any).smsStatus === 'delivered' ? 'text-green-600' :
+                (order as any).smsStatus === 'sent' ? 'text-green-600' :
+                (order as any).smsStatus === 'failed' ? 'text-red-600' :
+                'text-yellow-600'
+              }`}>
+                {(order as any).smsStatus === 'delivered' ? '✓ Delivered' :
+                 (order as any).smsStatus === 'sent' ? '✓ Sent' :
+                 (order as any).smsStatus === 'failed' ? '✗ Failed' :
+                 (order as any).smsStatus === 'queued' ? '⏳ Queued' :
+                 '✓ Sent'}
+              </p>
               {(order as any).smsSentAt && (
                 <p className="text-sm text-muted-foreground mt-1">
                   {new Date((order as any).smsSentAt).toLocaleString()}
