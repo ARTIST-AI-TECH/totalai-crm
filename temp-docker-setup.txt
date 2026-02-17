@@ -7,6 +7,7 @@ docker rm n8n
 # Start n8n with all environment variables including new CRM webhook settings
 docker run -d \
   --name n8n \
+  --restart unless-stopped \
   --network n8n_n8n-network \
   --cap-add=SYS_ADMIN \
   --ipc=host \
@@ -32,6 +33,7 @@ docker run -d \
   -e N8N_BASIC_AUTH_PASSWORD='@19TGl0bal18!' \
   -e CRM_WEBHOOK_URL=https://flowpro-totalai.netlify.app \
   -e N8N_WEBHOOK_SECRET=ce1e6ea232cf2523a719c5f0442f4e126252cb6432fd0d934a353543abafffb5 \
+  -e N8N_PAYLOAD_SIZE_MAX=16 \
   n8n-puppeteer
 
 echo "✅ n8n container restarted successfully!"
