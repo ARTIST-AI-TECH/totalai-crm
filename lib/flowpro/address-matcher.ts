@@ -168,6 +168,8 @@ export interface ScoredCandidate {
   score: number;
   customerIds: number[];
   customerName: string | null;
+  /** Normalized address key of this candidate — used to detect duplicate records. */
+  canonical: string;
 }
 
 export type Decision = 'match' | 'review' | 'no-match';
@@ -185,6 +187,12 @@ export interface MatchOptions {
   acceptAt?: number;
   reviewAt?: number;
   minGap?: number;
+  /**
+   * The work order's resolved agency (Simpro customer id). When multiple sites
+   * share an address (duplicates, agency changes), the one belonging to this
+   * customer is the right one — it disambiguates and confirms the match.
+   */
+  preferCustomerId?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -352,6 +360,11 @@ export function scorePair(wo: NormalizedAddress, site: NormalizedAddress): numbe
     s = wo.postcode === site.postcode ? Math.min(1, s + 0.02) : s * 0.85;
   }
 
+  // A different unit is a different home — never let "1/185A" auto-match "3/185A".
+  // Strong penalty so the correct-unit site (if present) wins, else it drops to
+  // review/no-match rather than dispatching to the wrong door.
+  if (wo.unit && site.unit && wo.unit !== site.unit) s *= 0.5;
+
   return s;
 }
 
@@ -376,31 +389,62 @@ export function matchSite(
   sites: SiteCandidateInput[],
   opts: MatchOptions = {}
 ): MatchResult {
-  const { acceptAt = 0.93, reviewAt = 0.75, minGap = 0.04 } = opts;
+  const { acceptAt = 0.93, reviewAt = 0.75, minGap = 0.04, preferCustomerId } = opts;
   const wo = normalizeAddress(workOrderAddress);
 
-  const scored: ScoredCandidate[] = sites
+  // Score every candidate, keeping the normalized canonical of its best-scoring
+  // address string (needed to spot duplicate site records for the same address).
+  const scoredAll: ScoredCandidate[] = sites
     .map((site) => {
-      const best = Math.max(
-        ...candidateAddressStrings(site).map((str) => scorePair(wo, normalizeAddress(str)))
-      );
+      let best = { score: 0, canonical: '' };
+      for (const str of candidateAddressStrings(site)) {
+        const n = normalizeAddress(str);
+        const sc = scorePair(wo, n);
+        if (sc >= best.score) best = { score: sc, canonical: n.canonical };
+      }
       return {
         id: site.id,
         name: site.name || '',
-        score: Math.round(best * 1000) / 1000,
+        score: Math.round(best.score * 1000) / 1000,
         customerIds: site.customerIds || [],
         customerName: site.customerName ?? null,
+        canonical: best.canonical,
       };
     })
     .filter((c) => c.score >= reviewAt * 0.8)
-    .sort((x, y) => y.score - x.score)
-    .slice(0, 5);
+    .sort((x, y) => y.score - x.score);
 
-  const best = scored[0] || null;
-  const runnerUp = scored[1] || null;
+  const scored = scoredAll.slice(0, 5); // returned candidates for the UI
+  let best = scoredAll[0] || null;
+  const runnerUp = scoredAll[1] || null;
+
+  // True duplicates: OTHER records whose normalized address equals the top's
+  // (same physical address, different Simpro site id — data-quality dupes).
+  const dupGroup = best
+    ? scoredAll.filter((c) => c.canonical && c.canonical === best!.canonical)
+    : [];
+  const isDuplicate = dupGroup.length > 1;
+
+  // Agency disambiguation. For duplicates, only the duplicate group is eligible
+  // (agency must pick the exact record); otherwise a small score band applies.
+  let agencyConfirmed = false;
+  if (preferCustomerId && best) {
+    const pool = isDuplicate ? dupGroup : scoredAll.filter((c) => c.score >= best!.score - 0.1);
+    const hits = pool.filter((c) => c.customerIds.includes(preferCustomerId));
+    if (hits.length === 1) {
+      best = hits[0];
+      agencyConfirmed = true;
+    }
+  }
 
   let decision: Decision = 'no-match';
-  if (best && best.score >= acceptAt && (!runnerUp || best.score - runnerUp.score >= minGap)) {
+  if (isDuplicate && !agencyConfirmed) {
+    // Multiple records for the same address and the agency didn't uniquely
+    // resolve them — never guess which billing record; ask a human.
+    decision = best && best.score >= reviewAt ? 'review' : 'no-match';
+  } else if (agencyConfirmed && best && best.score >= reviewAt) {
+    decision = 'match';
+  } else if (best && best.score >= acceptAt && (!runnerUp || best.score - runnerUp.score >= minGap)) {
     decision = 'match';
   } else if (best && best.score >= reviewAt) {
     decision = 'review';
