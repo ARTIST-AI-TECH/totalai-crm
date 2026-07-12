@@ -77,6 +77,19 @@ export async function resolveSite(input: {
     };
   }
 
+  // Resolve the work order's agency (from the learned map) to disambiguate
+  // duplicate-address sites and confirm ties.
+  let preferCustomerId: number | undefined;
+  const domain = emailDomain(input.pmEmail);
+  if (domain) {
+    const cm = await db
+      .select({ id: flowproCustomerMap.simproCustomerId })
+      .from(flowproCustomerMap)
+      .where(and(eq(flowproCustomerMap.teamId, TEAM_ID), eq(flowproCustomerMap.agencyKey, domain)))
+      .limit(1);
+    if (cm.length) preferCustomerId = cm[0].id;
+  }
+
   // L1 — fuzzy match against the local mirror of Simpro sites.
   const rows = await db
     .select()
@@ -90,7 +103,7 @@ export async function resolveSite(input: {
     customerIds: (r.customerIds as number[] | null) || [],
   }));
 
-  const result = matchSite(input.rawAddress, candidates, input.opts);
+  const result = matchSite(input.rawAddress, candidates, { ...input.opts, preferCustomerId });
   const best = result.best;
   const customerId = best?.customerIds?.[0] ?? null;
   const customerName = customerId ? await customerNameFor(customerId) : null;
