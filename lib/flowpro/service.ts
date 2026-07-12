@@ -106,16 +106,21 @@ export async function resolveSite(input: {
   const result = matchSite(input.rawAddress, candidates, { ...input.opts, preferCustomerId });
   const best = result.best;
   const customerId = best?.customerIds?.[0] ?? null;
-  const customerName = customerId ? await customerNameFor(customerId) : null;
+
+  // Only surface a concrete site/customer on a confident match. For review or
+  // no-match the top-level fields are null (the caller must use `candidates`,
+  // not a weak best-guess) — prevents a no-match from advertising a bogus site.
+  const isMatch = result.decision === 'match';
+  const resolvedCustomerId = isMatch ? customerId : null;
 
   return {
     decision: result.decision, // 'match' | 'review' | 'no-match'
     source: 'fuzzy',
     addressKey: key,
-    siteId: best?.id ?? null,
-    siteName: best?.name ?? null,
-    customerId,
-    customerName,
+    siteId: isMatch ? best?.id ?? null : null,
+    siteName: isMatch ? best?.name ?? null : null,
+    customerId: resolvedCustomerId,
+    customerName: resolvedCustomerId ? await customerNameFor(resolvedCustomerId) : null,
     score: best?.score,
     candidates: result.candidates,
     sitesInPool: rows.length,
