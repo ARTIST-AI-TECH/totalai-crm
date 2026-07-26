@@ -99,5 +99,34 @@ console.log('\n— ambiguous pair routes to review, not a wrong auto-match —')
   ok ? pass++ : fail++;
 }
 
+// A work order for a unit we don't have, at a building we DO service, must go to
+// review with the sibling units visible — never silently "new", never the wrong
+// unit. This is the 900-unit-complex case (one address, many units).
+console.log('\n— unit at a known building routes to review, siblings visible —');
+{
+  const building: SiteCandidateInput[] = [
+    { id: 401, name: '4/615 Brighton Road, Seacliff', address: { line: '4/615 Brighton Road', city: 'Seacliff' }, customerIds: [9001] },
+    { id: 402, name: '7/615 Brighton Road, Seacliff', address: { line: '7/615 Brighton Road', city: 'Seacliff' }, customerIds: [9001] },
+  ];
+  // unit 6 not in the pool -> review + siblings shown (not no-match/"new")
+  const r1 = matchSite('6/615 Brighton Rd, Seacliff', building);
+  const siblingsVisible = r1.candidates.some((c) => c.id === 401) && r1.candidates.some((c) => c.id === 402);
+  const ok1 = r1.decision === 'review' && siblingsVisible;
+  console.log(`${ok1 ? 'PASS' : 'FAIL'}  "6/615" -> ${r1.decision}, siblings visible=${siblingsVisible} (want review + siblings)`);
+  ok1 ? pass++ : fail++;
+
+  // even with the agency known, a wrong unit must NOT auto-match
+  const r2 = matchSite('6/615 Brighton Rd, Seacliff', building, { preferCustomerId: 9001 });
+  const ok2 = r2.decision !== 'match';
+  console.log(`${ok2 ? 'PASS' : 'FAIL'}  "6/615" [agency 9001] -> ${r2.decision} (must not auto-match a sibling unit)`);
+  ok2 ? pass++ : fail++;
+
+  // the CORRECT unit still auto-matches cleanly among its siblings
+  const r3 = matchSite('7/615 Brighton Rd, Seacliff', building);
+  const ok3 = r3.decision === 'match' && r3.best?.id === 402;
+  console.log(`${ok3 ? 'PASS' : 'FAIL'}  "7/615" -> ${r3.decision} site=${r3.best?.id} (want match/402)`);
+  ok3 ? pass++ : fail++;
+}
+
 console.log(`\n${pass}/${pass + fail} passed`);
 if (fail > 0) process.exitCode = 1;
