@@ -170,6 +170,8 @@ export interface ScoredCandidate {
   customerName: string | null;
   /** Normalized address key of this candidate — used to detect duplicate records. */
   canonical: string;
+  /** True when this is the same building as the work order but a DIFFERENT unit. */
+  unitMismatch?: boolean;
 }
 
 export type Decision = 'match' | 'review' | 'no-match';
@@ -360,10 +362,16 @@ export function scorePair(wo: NormalizedAddress, site: NormalizedAddress): numbe
     s = wo.postcode === site.postcode ? Math.min(1, s + 0.02) : s * 0.85;
   }
 
-  // A different unit is a different home — never let "1/185A" auto-match "3/185A".
-  // Strong penalty so the correct-unit site (if present) wins, else it drops to
-  // review/no-match rather than dispatching to the wrong door.
-  if (wo.unit && site.unit && wo.unit !== site.unit) s *= 0.5;
+  // A different unit is a different home — never auto-match "1/185A" to "3/185A".
+  // But when the rest of the address is a strong BUILDING match (same number,
+  // street and suburb), keep the sibling unit visible in the REVIEW band instead
+  // of burying it: a work order for unit 6 at a building we already service as
+  // units 4 and 7 must be human-confirmed, not silently treated as brand-new.
+  // The correct-unit site (if present) has no penalty, so it still outranks and
+  // wins. (This is the 900-unit-complex case: one address, many units.)
+  if (wo.unit && site.unit && wo.unit !== site.unit) {
+    s = s >= 0.9 ? 0.86 : s * 0.5;
+  }
 
   return s;
 }
@@ -396,12 +404,15 @@ export function matchSite(
   // address string (needed to spot duplicate site records for the same address).
   const scoredAll: ScoredCandidate[] = sites
     .map((site) => {
-      let best = { score: 0, canonical: '' };
+      let best = { score: 0, canonical: '', unit: '' };
       for (const str of candidateAddressStrings(site)) {
         const n = normalizeAddress(str);
         const sc = scorePair(wo, n);
-        if (sc >= best.score) best = { score: sc, canonical: n.canonical };
+        if (sc >= best.score) best = { score: sc, canonical: n.canonical, unit: n.unit };
       }
+      // Same building (score landed in/above the review band) but a different
+      // unit than the work order → a sibling unit; must be reviewed, not matched.
+      const unitMismatch = !!(wo.unit && best.unit && wo.unit !== best.unit && best.score >= reviewAt);
       return {
         id: site.id,
         name: site.name || '',
@@ -409,6 +420,7 @@ export function matchSite(
         customerIds: site.customerIds || [],
         customerName: site.customerName ?? null,
         canonical: best.canonical,
+        unitMismatch,
       };
     })
     .filter((c) => c.score >= reviewAt * 0.8)
@@ -442,6 +454,11 @@ export function matchSite(
     // Multiple records for the same address and the agency didn't uniquely
     // resolve them — never guess which billing record; ask a human.
     decision = best && best.score >= reviewAt ? 'review' : 'no-match';
+  } else if (best?.unitMismatch) {
+    // Right building, WRONG unit (the correct unit isn't in the pool). Never
+    // auto-match to a sibling unit — even under agency confirmation — and never
+    // treat it as brand-new without a human seeing the sibling units first.
+    decision = best.score >= reviewAt ? 'review' : 'no-match';
   } else if (agencyConfirmed && best && best.score >= reviewAt) {
     decision = 'match';
   } else if (best && best.score >= acceptAt && (!runnerUp || best.score - runnerUp.score >= minGap)) {

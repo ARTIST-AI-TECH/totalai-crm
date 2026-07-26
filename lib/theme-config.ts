@@ -92,4 +92,4 @@ export const THEME_CONFIGS: ThemeConfig[] = [
   },
 ];
 
-export const DEFAULT_THEME = 'default';
+export const DEFAULT_THEME = 'violet';

@@ -80,10 +80,34 @@ const THEME_TOKENS = {
     light: {
       '--primary': '262.1 83.3% 57.8%',
       '--primary-foreground': '210 20% 98%',
+      '--primary-hover': '271 81% 56%',
+      '--primary-light': '270 100% 96%',
+      '--accent': '47 100% 60%',
+      '--accent-foreground': '222 47% 11%',
+      '--accent-hover': '43 96% 56%',
+      '--accent-light': '270 100% 98%',
+      '--success': '160 84% 39%',
+      '--success-light': '160 84% 95%',
+      '--warning': '43 96% 56%',
+      '--warning-light': '43 96% 95%',
+      '--info': '217 91% 60%',
+      '--info-light': '217 91% 95%'
     },
     dark: {
       '--primary': '263.4 70% 50.4%',
       '--primary-foreground': '210 20% 98%',
+      '--primary-hover': '258 85% 70%',
+      '--primary-light': '258 50% 20%',
+      '--accent': '47 100% 60%',
+      '--accent-foreground': '240 10% 15%',
+      '--accent-hover': '47 100% 55%',
+      '--accent-light': '47 50% 20%',
+      '--success': '142 76% 36%',
+      '--success-light': '142 50% 15%',
+      '--warning': '38 92% 50%',
+      '--warning-light': '38 50% 15%',
+      '--info': '217 91% 60%',
+      '--info-light': '217 50% 15%'
     }
   },
   yellow: {
