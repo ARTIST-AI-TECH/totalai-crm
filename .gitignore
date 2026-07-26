@@ -46,3 +46,8 @@ PRODUCTION_CREDENTIALS.md
 
 # Local Netlify folder
 .netlify
+
+# FlowPro local-only files — these embed the n8n webhook secret / credentials.
+# Keep OUT of git (import into n8n directly). Never commit.
+/n8n-workflows/
+simpro.env

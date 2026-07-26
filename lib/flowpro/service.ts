@@ -30,6 +30,63 @@ export function emailDomain(email?: string | null): string {
 }
 
 // ---------------------------------------------------------------------------
+// Display-address parser — splits a raw work-order address into human-readable
+// components (ORIGINAL casing preserved) for CREATING a Simpro site.
+//
+// Deliberately separate from the matcher's normalizeAddress() (which lowercases
+// and expands abbreviations for *matching*). This produces what you'd want to
+// store on a Simpro site record.
+//
+// IMPORTANT (handover): an identical, self-contained copy of this logic lives
+// inline in the n8n "Prep Site Create" node, so site creation keeps working with
+// ZERO dependency on this CRM after the brain is pulled. Keep the two in sync.
+// ---------------------------------------------------------------------------
+const AU_STATE_CODES = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
+
+export interface ParsedAddress {
+  addressLine: string;
+  city: string;
+  state: string;
+  postcode: string;
+}
+
+export function parseDisplayAddress(
+  raw: string | null | undefined,
+  defaultState = 'SA'
+): ParsedAddress {
+  const out: ParsedAddress = { addressLine: '', city: '', state: '', postcode: '' };
+  if (!raw) { out.state = defaultState; return out; }
+
+  const segs = String(raw).replace(/\s+/g, ' ').split(',').map((s) => s.trim()).filter(Boolean);
+  if (!segs.length) { out.state = defaultState; return out; }
+
+  // Pull state + postcode from the TAIL, so a 4-digit *street number* at the
+  // front (e.g. "1234 Grand Junction Rd") is never mistaken for a postcode.
+  const tail = segs[segs.length - 1];
+  const sm = tail.match(new RegExp('\\b(' + AU_STATE_CODES.join('|') + ')\\b', 'i'));
+  const pm = tail.match(/\b(\d{4})\b/);
+  if (sm) {
+    out.state = sm[1].toUpperCase();
+    if (pm) out.postcode = pm[1];
+    segs.pop(); // consume the "SA 5095" tail segment
+  } else if (pm && segs.length > 1) {
+    // "... Suburb 5095" with no state token
+    out.postcode = pm[1];
+    const stripped = tail.replace(pm[0], '').trim();
+    if (stripped) segs[segs.length - 1] = stripped; else segs.pop();
+  }
+
+  if (segs.length >= 2) {
+    out.city = segs[segs.length - 1];
+    out.addressLine = segs.slice(0, -1).join(', ');
+  } else {
+    out.addressLine = segs[0] || String(raw).trim();
+  }
+  if (!out.state) out.state = defaultState;
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Site resolution — L0 learned map, then L1 fuzzy match against the mirror.
 // ---------------------------------------------------------------------------
 export type ResolveDecision = 'hit' | 'match' | 'review' | 'no-match';
@@ -46,6 +103,8 @@ export interface ResolveSiteResult {
   candidates?: ScoredCandidate[];
   sitesInPool?: number;
   reason?: string;
+  /** Display-ready components of the work-order address (for creating a site). */
+  parsed?: ParsedAddress;
 }
 
 export async function resolveSite(input: {
@@ -55,7 +114,8 @@ export async function resolveSite(input: {
   opts?: MatchOptions;
 }): Promise<ResolveSiteResult> {
   const key = addressKey(input.rawAddress);
-  if (!key) return { decision: 'no-match', addressKey: '', reason: 'unparseable-address' };
+  const parsed = parseDisplayAddress(input.rawAddress);
+  if (!key) return { decision: 'no-match', addressKey: '', reason: 'unparseable-address', parsed };
 
   // L0 — the permanent memory. O(1), no Simpro call.
   const mapped = await db
@@ -74,6 +134,7 @@ export async function resolveSite(input: {
       customerId: m.simproCustomerId,
       customerName: m.simproCustomerName,
       score: 1,
+      parsed,
     };
   }
 
@@ -124,6 +185,7 @@ export async function resolveSite(input: {
     score: best?.score,
     candidates: result.candidates,
     sitesInPool: rows.length,
+    parsed,
   };
 }
 
