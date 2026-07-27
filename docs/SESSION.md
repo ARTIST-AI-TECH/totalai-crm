@@ -102,6 +102,13 @@ Ady's separate product (HQIQ / hqiq.ai). **Conversational AI avatar concierge th
 - **[FlowPro ops]** Monitor FlowProIssues Blue/Red mix; decide on v2-autocreate.
 - Optional: render the market research as a shareable artifact/deck for a US partner.
 
+## ✅ AU at walk-away state (2026-07-27, Step B)
+- **B1 (SMS resilience): DONE** — `SMS to Tenant` onError=continueRegularOutput (UI + file). Bad number no longer blocks email-move/logging.
+- **B2 (agency email_domains): NOT VIABLE — do not build.** Data proof: PPG's Simpro maps one agency domain → MANY customers (harrisre.com.au → 19; 9 domains → 31 pairs). Customers are per-landlord/property, not per-agency, so a domain can't pick a customer → agency disambiguation via domain is a dead end. `flowpro_customers.raw_data` also holds only `ID` (0/2820 have emails), so nothing to derive from.
+- **Residual Reds (~3) are correct safety behavior:** true duplicates (2 Giles Avenue ×2 in Simpro) + unit ambiguity. Should stay human. Not defects.
+- **Remaining "reduce Reds" options (NOT worth it now):** (a) learning loop for HUMAN resolutions needs a Simpro reconciliation to capture manual job creation; (b) de-dupe the 602 duplicate site records = client-side Simpro hygiene. Folder is tiny → leave both.
+- **→ AU is done. No meaningful code fix remains.** Focus shifts to US (Fable 5, 900-unit) via `docs/FLOWPRO-ADDRESS-RESOLUTION-ENGINEERING.md` + `docs/FLOWCONTROL-US-UNIT-NORMALIZATION.md`.
+
 ## ✅ Auto-create LIVE & client-validated (2026-07-27)
 - `v2-autocreate` (all-in-one) imported + active; parent SMS E.164 fix applied live. Platinum/Hilary confirmed the flagged "new site" detections are **all genuinely new** (detection accurate). Backlog she already created manually → will now MATCH (no re-creation). FlowProIssues down to ~3 Reds, no more Blue.
 - **Reprocessing is impossible** (Selva's concern): trigger excludes FlowProIssues folder + backlog subjects relabelled (no longer match `[TAPI-`) + 24h window. Auto-create = new incoming only.
