@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlowPro — Understanding the FlowProIssues Folder</title>
+<style>
+  :root{
+    --ink:#1b1b1f; --muted:#5f6470; --rule:#e2e2e6;
+    --blue:#1f4e79; --blue-soft:#eaf1f8;
+    --red:#b3261e; --red-soft:#fbeae9;
+    --paper:#ffffff; --accent:#1f4e79;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0; background:#f4f5f7; color:var(--ink);
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:16px; line-height:1.6;
+  }
+  .page{
+    max-width:760px; margin:32px auto; background:var(--paper);
+    padding:56px 60px 64px; box-shadow:0 1px 3px rgba(0,0,0,.12);
+  }
+  h1,h2,h3,.eyebrow,th,.chip,.meta,.sig{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  .eyebrow{
+    text-transform:uppercase; letter-spacing:.14em; font-size:11px;
+    font-weight:700; color:var(--blue); margin:0 0 10px;
+  }
+  h1{
+    font-size:27px; line-height:1.2; margin:0 0 18px; font-weight:800;
+    text-wrap:balance; letter-spacing:-.01em;
+  }
+  .meta{
+    font-size:13.5px; color:var(--muted); line-height:1.7;
+    border-top:2px solid var(--ink); border-bottom:1px solid var(--rule);
+    padding:14px 0; margin:0 0 30px;
+  }
+  .meta b{color:var(--ink); font-weight:600;}
+  h2{
+    font-size:17px; font-weight:700; margin:34px 0 12px;
+    padding-bottom:7px; border-bottom:1px solid var(--rule); letter-spacing:-.005em;
+  }
+  h3{font-size:15px; font-weight:700; margin:22px 0 8px;}
+  p{margin:0 0 13px;}
+  ul,ol{margin:0 0 13px; padding-left:22px;}
+  li{margin:0 0 7px;}
+  strong{font-weight:700;}
+  a{color:var(--blue);}
+  hr{display:none;}
+  .lead-list li{margin-bottom:10px;}
+
+  table{
+    width:100%; border-collapse:collapse; margin:16px 0 20px;
+    font-size:13.5px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  th{
+    text-align:left; background:#f7f8fa; color:var(--ink); font-weight:700;
+    font-size:11.5px; text-transform:uppercase; letter-spacing:.05em;
+    padding:9px 11px; border-bottom:2px solid var(--rule); vertical-align:bottom;
+  }
+  td{padding:9px 11px; border-bottom:1px solid var(--rule); vertical-align:top; line-height:1.45;}
+  tbody tr:last-child td{border-bottom:none;}
+  .num{font-variant-numeric:tabular-nums; white-space:nowrap;}
+
+  .chip{
+    display:inline-block; font-size:11px; font-weight:700; padding:2px 8px;
+    border-radius:999px; letter-spacing:.02em; white-space:nowrap;
+  }
+  .chip-blue{background:var(--blue-soft); color:var(--blue);}
+  .chip-red{background:var(--red-soft); color:var(--red);}
+  .ok{color:#137a3f; font-weight:700;}
+
+  blockquote{
+    margin:16px 0; padding:12px 18px; background:#f7f8fa;
+    border-left:3px solid var(--blue); color:#3a3f4a; font-size:14.5px;
+  }
+  .callout{
+    margin:18px 0; padding:14px 18px; background:var(--blue-soft);
+    border-radius:6px; font-size:14.5px;
+  }
+  .sig{margin-top:30px; font-size:15px; font-weight:600;}
+
+  @media (max-width:640px){
+    .page{padding:32px 22px; margin:0;}
+    body{font-size:15px;}
+    table{font-size:12.5px;}
+    .table-wrap{overflow-x:auto;}
+  }
+  @media print{
+    body{background:#fff;}
+    .page{box-shadow:none; margin:0; max-width:none; padding:0 6mm;}
+    h2{break-after:avoid;}
+    table,tr,blockquote,.callout{break-inside:avoid;}
+    a{color:var(--ink); text-decoration:none;}
+    @page{margin:16mm 15mm;}
+    *{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  }
+</style>
+</head>
+<body>
+<main class="page">
+
+  <p class="eyebrow">FlowPro · Status Report &amp; Explainer</p>
+  <h1>Understanding the FlowProIssues Folder</h1>
+
+  <div class="meta">
+    <b>From:</b> Ady &nbsp;·&nbsp; <b>To:</b> Selva &nbsp;·&nbsp; <b>Date:</b> 14 July 2026<br>
+    <b>Re:</b> What the Blue and Red flags mean, whether anything is broken, and how we drive the folder toward empty
+  </div>
+
+  <h2>Summary</h2>
+  <ul class="lead-list">
+    <li>The <strong>FlowProIssues</strong> folder is the automation's <em>exception queue</em> — the small number of work orders it deliberately <strong>won't</strong> turn into a job without a human glance. Everything else is now created automatically.</li>
+    <li>The two flags mean different things:
+      <ul>
+        <li><span class="chip chip-blue">Blue · NewJobSiteFound</span> &nbsp;<em>"This looks like a brand-new property. Someone should create the site."</em></li>
+        <li><span class="chip chip-red">Red · NoJobSiteFound</span> &nbsp;<em>"An existing site looks similar, but not similar enough to be sure. A human should confirm which one before we act."</em></li>
+      </ul>
+    </li>
+    <li>I re-checked the three work orders you asked about against the live system. <strong>All three were flagged correctly</strong>, and all three have since been created in Simpro. There is <strong>no bug</strong> — the folder is the safety net working as designed.</li>
+    <li>There is a clear, low-risk path to make this folder almost always empty. It's described at the end.</li>
+  </ul>
+
+  <h2>How the automation decides</h2>
+  <p>For every incoming work order, the system compares the property address against <strong>every existing site in Simpro</strong> and produces a confidence score. Based on that score, one of four things happens:</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Outcome</th><th>What it means</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Exact memory match</strong></td><td>We've filed this exact address before</td><td><span class="ok">✓</span> Job created automatically</td></tr>
+      <tr><td><strong>Confident match</strong><br><span style="color:var(--muted)">high score, one clear winner</span></td><td>One existing site clearly fits</td><td><span class="ok">✓</span> Job created automatically</td></tr>
+      <tr><td><strong>Possible match</strong><br><span style="color:var(--muted)">medium score</span></td><td>One or more existing sites <em>look</em> like it, but none is a safe, unique pick</td><td><span class="chip chip-red">Red</span> → FlowProIssues</td></tr>
+      <tr><td><strong>No match</strong><br><span style="color:var(--muted)">low score</span></td><td>Nothing in Simpro resembles it</td><td><span class="chip chip-blue">Blue</span> → FlowProIssues</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Only the bottom two land in FlowProIssues. The first two become jobs with no human involvement.</p>
+
+  <h2>Blue vs. Red — the plain-English version</h2>
+  <p>Think of the automation as a mail carrier learning a new route:</p>
+  <ul>
+    <li><span class="chip chip-blue">Blue</span> is the carrier saying <em>"there's a new house here that isn't on my map yet — add it."</em> The address doesn't resemble anything we already have, so it's almost certainly a new property that needs a site created.</li>
+    <li><span class="chip chip-red">Red</span> is the carrier saying <em>"two houses on this street could be the one on the parcel — I'm not going to shove it through the wrong door; tell me which."</em> An existing site is close enough to be a real possibility, but not close enough to be certain. Rather than risk sending a plumber to the wrong address, the system asks a person to confirm.</li>
+  </ul>
+  <p>The important point: <strong>Red is not the system failing to find a site. It usually means it found one that's <em>too</em> similar to a different, existing property, and is refusing to guess.</strong> That refusal is exactly what prevents the mis-filed jobs we used to get.</p>
+  <blockquote>A note on the labels: the wording is slightly counter-intuitive. "<strong>NoJobSiteFound</strong>" (Red) sounds like <em>nothing</em> was found, but it actually means the opposite — candidates <em>were</em> found and need a human to choose between them. We'll make these names clearer in a future update.</blockquote>
+
+  <h2>Proof: the three work orders you flagged</h2>
+  <p>You gave me three examples. I ran each back through the live system. Here is what existed in Simpro at the moment each was flagged (the confidence score is the similarity to the closest existing property):</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Work order</th><th>Closest existing property at the time</th><th class="num">Score</th><th>Decision</th><th>Correct?</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1A Randell Road,</strong> Morphett Vale</td><td>1A Grainger Road, Somerton Park</td><td class="num">0.745</td><td><span class="chip chip-blue">Blue</span> new site</td><td><span class="ok">✓</span> genuinely new</td></tr>
+      <tr><td><strong>7 Bristol Lane,</strong> Woodville West</td><td>7 Bristol Crescent, Davoren Park</td><td class="num">0.738</td><td><span class="chip chip-blue">Blue</span> new site</td><td><span class="ok">✓</span> genuinely new</td></tr>
+      <tr><td><strong>9 Bryant Street,</strong> Mansfield Park</td><td><strong>13/9 Bryan Street, Salisbury</strong><br><span style="color:var(--muted)">(and 8/9 Brian Street, Salisbury)</span></td><td class="num">0.838</td><td><span class="chip chip-red">Red</span> review</td><td><span class="ok">✓</span> near-twin existed</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>What this shows:</p>
+  <ul>
+    <li>The two <strong>Blue</strong> work orders had <em>no</em> existing property close enough to matter (the nearest were different streets — Grainger, Bristol Crescent). Correctly treated as new.</li>
+    <li>The <strong>Red</strong> work order had a genuine near-twin already in Simpro: <strong>9 Bryan Street</strong> and <strong>9 Brian Street</strong> in Salisbury — same street number, and a street name just one letter away from "Bryant." That is precisely the situation where auto-creating or auto-matching would be dangerous, so the system correctly asked for a human check.</li>
+  </ul>
+  <p>All three properties have since been created in Simpro (their site records are sequential, confirming they were added right after being flagged), and the system now recognises all three automatically. <strong>The loop closed exactly as intended.</strong></p>
+
+  <h2>Is anything broken?</h2>
+  <p><strong>No.</strong> Every flag in your examples was the correct decision. The Red flag on "9 Bryant Street" is the clearest possible illustration of <em>why</em> the folder exists: without it, the job could have been filed against "9 Bryan Street, Salisbury" — a real, different address across town.</p>
+  <p>The ratio you're seeing (a large majority auto-filed, only a handful in FlowProIssues) is the system performing as designed — and, as you noted, dramatically better than the previous tool.</p>
+
+  <h2>The road to an (almost) empty FlowProIssues folder</h2>
+  <p>Three levers, in order of impact:</p>
+  <ol>
+    <li><strong>Turn on automatic site creation for Blue.</strong> Blue means "genuinely new property." Once we've confirmed a first batch of Blue flags really are new (a quick check against Simpro), we can let the automation <strong>create the new site and the job automatically</strong> for the Blue cases. A ready-to-go version of the workflow already does this — and, critically, it <em>still</em> sends Red cases to a human. This removes the bulk of the folder in one step, with no risk of creating duplicates of existing sites.</li>
+    <li><strong>Let the memory keep growing so Red shrinks on its own.</strong> Every time a property is filed, the system remembers it — and remembers which managing agency it belongs to. That agency memory is what lets it break "near-twin" ties automatically in future. As it fills in, cases that are Red today will resolve on their own tomorrow.</li>
+    <li><strong>Clean up duplicate site records in Simpro over time.</strong> Some Reds are caused by the same property existing twice in Simpro. Tidying those at the source removes those flags permanently.</li>
+  </ol>
+  <p><strong>What will always remain</strong> is a small, healthy trickle of Red — the genuinely ambiguous cases (a real near-twin address, a work order missing its suburb). Those <em>should</em> get a five-second human glance. That residue isn't a failure; it's the guarantee that a job never goes to the wrong door.</p>
+
+  <h2>One recommended improvement</h2>
+  <p>When a person resolves a FlowProIssues item today, they typically create the site <strong>directly in Simpro</strong>. That works — but the automation only learns about it <em>passively</em>, on the next hourly sync, and it never records the agency link that helps prevent future Reds.</p>
+  <div class="callout"><strong>Recommendation:</strong> wire the human resolution step so that confirming/creating a site also <strong>teaches the automation</strong> the address and its agency. This makes the memory grow every time a person touches the folder — which is exactly what makes the folder get smaller over time.</div>
+
+  <h2>What we need before turning on auto-creation</h2>
+  <p>One confirmation, that's all: <strong>spot-check the current Blue flags against Simpro to be sure they are genuinely new properties</strong> (not existing sites the system happened to miss). Once we're satisfied Blue is trustworthy — and the evidence above says it is — we flip on automatic creation for Blue, keep Red going to a person, and the folder becomes the small exception queue it was always meant to be.</p>
+  <p>Happy to walk through any of this live.</p>
+
+  <p class="sig">— Ady</p>
+
+</main>
+</body>
+</html>
