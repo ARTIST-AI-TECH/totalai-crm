@@ -44,7 +44,7 @@ This is an operational handover of **one client's deployment**. It does **not** 
 
 ## 6. Settlement of accrued support
 
-Under the original arrangement, ongoing support was to be funded by the client's monthly fee, which has not been collected. In settlement of Ady's accrued, uncompensated support to date, **TotalAI will pay Ady a one-time amount of $[1,500–2,000] [AUD/USD]**, due by [date].
+Under the original arrangement, ongoing support was to be funded by the client's monthly fee, which has not been collected. In settlement of Ady's accrued, uncompensated support to date, **TotalAI will pay Ady a one-time amount of $1,750 USD**, due by [date].
 
 Aside from this one-time settlement, **no other payment is owed by either party** — there is no transfer fee, no retainer, no ongoing licence, and no revenue share. This is a full and clean financial break.
 

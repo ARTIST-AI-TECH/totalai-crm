@@ -1,6 +1,13 @@
 # FlowPro (PPG / Simpro) — Finalize & Handoff Runbook
 
-*Last updated 2026-07-26. Goal: ship the pending improvements, get PPG to a low-maintenance state, hand it off cleanly, then step away and focus on the US.*
+*Last updated 2026-08-05. Goal: ship the pending improvements, get PPG to a low-maintenance state, hand it off cleanly, then step away and focus on the US.*
+
+> ## ✅ STATUS 2026-08-05 — Sections 1–4 are DONE; only Section 5 (the handoff itself) remains
+>
+> - **Sections 1–3 executed 2026-08-05** (after diagnosing that the 07-27 swap had silently re-pointed production to the old v1 sub — see `SESSION.md` for the full account): CRM deployed with the sibling-premises safety fixes (tests **29/29**, ground-truth 484/512 correct), production re-pointed to `extract-and-create-job (v2 — CRM resolution)` with auto-create ON, learning verified reachable, validated backfill run (403 mappings, 6 historical mis-filings refused).
+> - **Section 4a (learning loop)**: the workflow's Learn step is live again; human-resolution learning stays deferred (reds are few). **4b (agency email-domains): dead end, do not build** — one PM domain maps to many Simpro customers (per-landlord), proven 2026-07-27.
+> - **Section 5 is now packaged and ready to send**: `n8n-workflows/handover-package/` (zip: `n8n-workflows/FlowPro-Handover-TotalAI-2026-08.zip`) — standalone workflows **updated with all CRM-independent fixes** (E.164 SMS, PDF retry+label, error-visible FlowProIssues runs, sub-error-tolerant parent), all CRM references stripped, plus setup guide, operator runbook, expectations doc (honest ~4-in-10 manual rate for standalone), 408-row address-reference CSV, and a both-sides cutover checklist. Separation memo updated to **$1,750 USD**; send the memo separately from the zip.
+> - ⚠ Two corrections to the stale text below: the deploy remote is now **`origin` = `ARTIST-AI-TECH/totalai-crm`** (not `adyngom/saas-starter`), and the matcher self-test count is **29/29** (not 21/21). Also add to daily diagnostics: `SELECT max(updated_at) FROM flowpro_site_map` — a frozen memory behind green executions was the July blind spot.
 
 > **How to use this:** work top to bottom. Each step is tagged **[UI]** (you click through Netlify/n8n), **[DB]** (a read-only psql check), or **[DEV]** (a code change — batch these into one short session or hand to a developer). Boxes with **✅ Verify** tell you how to confirm the step worked before moving on.
 
