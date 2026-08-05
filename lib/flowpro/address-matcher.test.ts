@@ -128,5 +128,84 @@ console.log('\n— unit at a known building routes to review, siblings visible �
   ok3 ? pass++ : fail++;
 }
 
+// Sibling-record safety. Two wrong-door holes found in live PPG data (Aug 2026):
+// (a) "41 Glengyle Terrace" auto-matched "41a Glengyle Terrace" — a bare street
+//     number must never silently resolve to its suffixed sibling (41a is
+//     usually a different dwelling on the subdivided lot), and vice versa;
+// (b) "2/17 Leadenhall St" auto-matched the record NAMED "4/17 Leadenhall St"
+//     because that record's ADDRESS LINE ("17 Leadenhall St") carries no unit —
+//     the unit-less string sailed past the unit-mismatch cap at 0.98.
+console.log('\n— suffixed-number sibling never auto-matches across the suffix —');
+{
+  const pool: SiteCandidateInput[] = [
+    { id: 501, name: '41a Glengyle Terrace, Glandore', address: { line: '41a Glengyle Terrace', city: 'Glandore' }, customerIds: [9101] },
+  ];
+  const r1 = matchSite('41 Glengyle Terrace, Glandore', pool);
+  const ok1 = r1.decision === 'review' && r1.candidates.some((c) => c.id === 501);
+  console.log(`${ok1 ? 'PASS' : 'FAIL'}  "41" vs only "41a" -> ${r1.decision} (want review, sibling visible)`);
+  ok1 ? pass++ : fail++;
+
+  // agency knowledge must not promote the suffixed sibling either
+  const r2 = matchSite('41 Glengyle Terrace, Glandore', pool, { preferCustomerId: 9101 });
+  const ok2 = r2.decision !== 'match';
+  console.log(`${ok2 ? 'PASS' : 'FAIL'}  "41" vs "41a" [agency] -> ${r2.decision} (must not auto-match)`);
+  ok2 ? pass++ : fail++;
+
+  // when the exact number exists, the suffixed sibling must not block or steal
+  const both: SiteCandidateInput[] = [
+    { id: 502, name: '41 Glengyle Terrace, Glandore', address: { line: '41 Glengyle Terrace', city: 'Glandore' } },
+    ...pool,
+  ];
+  const r3 = matchSite('41 Glengyle Terrace, Glandore', both);
+  const ok3 = r3.decision === 'match' && r3.best?.id === 502;
+  console.log(`${ok3 ? 'PASS' : 'FAIL'}  "41" vs both -> ${r3.decision} site=${r3.best?.id} (want match/502)`);
+  ok3 ? pass++ : fail++;
+}
+
+console.log('\n— a unit named only in the record NAME still guards the door —');
+{
+  // Real shape from Simpro: name carries the unit, address line does not.
+  const sibling: SiteCandidateInput = {
+    id: 601, name: '4/17 Leadenhall Street, Port Adelaide',
+    address: { line: '17 Leadenhall Street', city: 'Port Adelaide' }, customerIds: [9201],
+  };
+  const r1 = matchSite('2/17 Leadenhall Street, Port Adelaide', [sibling]);
+  const ok1 = r1.decision === 'review' && r1.candidates[0]?.unitMismatch === true;
+  console.log(`${ok1 ? 'PASS' : 'FAIL'}  "2/17" vs [name 4/17, line unit-less] -> ${r1.decision} unitMM=${r1.candidates[0]?.unitMismatch} (want review + flag)`);
+  ok1 ? pass++ : fail++;
+
+  const r2 = matchSite('2/17 Leadenhall Street, Port Adelaide', [sibling], { preferCustomerId: 9201 });
+  const ok2 = r2.decision !== 'match';
+  console.log(`${ok2 ? 'PASS' : 'FAIL'}  "2/17" vs [4/17] [agency] -> ${r2.decision} (must not auto-match)`);
+  ok2 ? pass++ : fail++;
+
+  // a unit-ed work order vs a bare BUILDING record = unknown unit -> review (§7)
+  const building: SiteCandidateInput = {
+    id: 602, name: '17 Leadenhall Street, Port Adelaide',
+    address: { line: '17 Leadenhall Street', city: 'Port Adelaide' },
+  };
+  const r3 = matchSite('2/17 Leadenhall Street, Port Adelaide', [building]);
+  const ok3 = r3.decision === 'review';
+  console.log(`${ok3 ? 'PASS' : 'FAIL'}  "2/17" vs bare building record -> ${r3.decision} (want review, unknown unit)`);
+  ok3 ? pass++ : fail++;
+
+  // the exact-unit record must WIN cleanly — its sibling's unit-less string
+  // must not drag it into review via the tie gap (live: exact hits stuck red)
+  const exact: SiteCandidateInput = {
+    id: 603, name: '2/17 Leadenhall Street, Port Adelaide',
+    address: { line: '2/17 Leadenhall Street', city: 'Port Adelaide' },
+  };
+  const r4 = matchSite('2/17 Leadenhall Street, Port Adelaide', [exact, sibling]);
+  const ok4 = r4.decision === 'match' && r4.best?.id === 603;
+  console.log(`${ok4 ? 'PASS' : 'FAIL'}  "2/17" vs [exact + sibling] -> ${r4.decision} site=${r4.best?.id} (want match/603)`);
+  ok4 ? pass++ : fail++;
+
+  // and the record whose NAME reveals the CORRECT unit still matches
+  const r5 = matchSite('4/17 Leadenhall Street, Port Adelaide', [sibling]);
+  const ok5 = r5.decision === 'match' && r5.best?.id === 601;
+  console.log(`${ok5 ? 'PASS' : 'FAIL'}  "4/17" vs [name 4/17, line unit-less] -> ${r5.decision} (want match/601)`);
+  ok5 ? pass++ : fail++;
+}
+
 console.log(`\n${pass}/${pass + fail} passed`);
 if (fail > 0) process.exitCode = 1;

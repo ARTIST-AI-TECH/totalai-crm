@@ -1,6 +1,21 @@
 # Session state — FlowPro / FlowControl (resume point)
 
-*Last updated: 2026-07-13. Read this first to pick up where we left off.*
+*Last updated: 2026-08-05. Read this first to pick up where we left off.*
+
+## 🚨 2026-08-05 — ROOT CAUSE of the ~40% red rate: production silently ROLLED BACK to v1 on 07-27
+
+The "too many review items" investigation (Fable 5) found the red rate is NOT the v2 matcher's review behaviour — **the v2 brain isn't running at all**:
+
+- **What happened:** the runbook's Step-2 parent import (07-27 18:08 UTC) used the repo's `n8n-workflows/PPG-create-job.json`, whose `Call extract-and-create-job` node carried a **stale sub-workflow reference** to the OLD pre-CRM v1 sub (`BC9zzabGVrI6nMVH`). Importing it silently re-pointed production away from v2 (`WXihj3biRDzFT8no`). Since then every work order runs **v1**: Simpro exact-prefix search on the clipped address ("Blvd"≠"Boulevard" bug back), **no CRM resolve, no learning, no auto-create** (v1's Create Site nodes are disabled), and every miss labelled `[NoJobSiteFound]`/Red (v1 has no Blue path — "zero blue items" was an artifact of the rollback, not auto-create working).
+- **Evidence:** v2 sub last executed 07-24 (matches `flowpro_site_map` last write 07-24 exactly — 0 writes despite 30 jobs since); v1 executions resume 07-26 23:18 UTC (= swap morning Adelaide); live workflow fetched via n8n API is the 27-node v1 (updated 07-08); of 75 post-swap executions: 31 jobs, 23 red (43% ≈ the observed 7:5).
+- **The good news:** the v2-autocreate content WAS correctly imported into `WXihj3biRDzFT8no` on 07-26 (36 nodes, Create Site enabled, all credentials mapped — verified identical to the local file). It has simply never run. **The fix is a one-click re-point of the parent's Execute node back to it** (+ Netlify deploy of the matcher fixes below, first).
+- **Red-pile categorization** (23 red executions 07-27→08-05, 22 unique, replayed via live `/resolve` + `created_at` cross-check): **~16 (73%) genuinely-new properties** → v2 would have auto-created (no red); **~2 (9%) existing sites v1's search missed** → v2 would have matched; **2 (9%) new-unit-at-known-building** → correct §7 review-with-siblings; **~2 (9%) genuine data-mess/duplicate reviews** (e.g. 15 Charbray double-record). So ~82% of the red pile is the rollback, NOT matcher behaviour. Hypothesis "the unit-safety rule drives the reds" is **refuted** (2/22); "learning stalled" is real but a symptom of the rollback (Learn wiring itself verified healthy through 07-24).
+- **Two latent WRONG-DOOR holes found & FIXED in the matcher while categorizing** (`lib/flowpro/address-matcher.ts`, tests 29/29):
+  1. **Unit-in-name-only:** a record named "4/17 Leadenhall St" with unit-less address line "17 Leadenhall St" scored 0.98 `unitMismatch=false` for a "2/17" WO → would have auto-matched the wrong unit. Now units revealed by ANY record string count; uncorroborated WO units cap into the review band (also covers bare building records = "unknown unit" per §7).
+  2. **Suffix asymmetry:** `numbersMatch("41","41a")=true` → WO "41 Glengyle Tce" would have auto-matched "41a" (real case TAPI-20556; 41a existed since go-live, 41 didn't). Now bare-vs-suffixed number = sibling-premises cap + `numberConflict` flag, never auto-matched, still visible for review.
+  - Bonus effects: exact-unit hits are no longer minGap-blocked into review by their siblings' unit-less strings (live cases 2/17 Leadenhall, 3/275-277 Portrush now match cleanly), and 5-vs-5A ties resolve to the exact record. Ground-truth replay of all 512 logged WOs: **correct 472→484 (95%), review 32→20, wrong 8→8 (same pre-existing historical mis-filings, none new)**.
+- **Repo fixes:** local `n8n-workflows/PPG-create-job.json` reference corrected → `WXihj3biRDzFT8no` (the landmine that caused this); matcher + tests updated; this doc + engineering doc §5 updated.
+- **GO-LIVE (pending, in order):** (1) deploy CRM to Netlify (matcher safety fixes must precede re-point); (2) re-point parent `PPG-create-job` → `extract-and-create-job (v2 — CRM resolution)` in n8n (creds already mapped; low-traffic window); (3) verify first executions: Resolve/Learn nodes fire, `flowpro_site_map` writes resume, a genuinely-new WO auto-creates; (4) expect red rate to drop from ~43% to roughly ~10% (new-unit + dup reviews only).
 
 ## TL;DR
 1. **FlowPro→Simpro fix: DONE and LIVE** (the reason the session started).

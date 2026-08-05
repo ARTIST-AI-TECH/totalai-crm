@@ -59,17 +59,18 @@ The mirror is refreshed hourly by an n8n sync workflow (`syncSites`/`syncCustome
 - **Number gate:** if both have a number and they don't match (via `numbersMatch`, which handles ranges `12-14` and suffixes `46A`), return 0.
 - Weighted **Jaro-Winkler**: streetName ×0.55, streetType ×0.15 (exact), suburb ×0.25 (JW), unit ×0.05 (exact). Normalize by the weight actually present.
 - Small adjustments: both-numbers +0.03; number-differs ×0.9; postcode match +0.02 / mismatch ×0.85.
-- **Unit mismatch** (both have units, differ): if the rest is a **strong building match** (`s ≥ 0.9`) → cap to **0.86** (stays visible in the review band, never auto-matches); else ×0.5. *This is the 900-unit-complex rule — see §7.*
+- **Sibling-premises cap** (added 2026-08-05): if the rest is a **strong building match** (`s ≥ 0.9`) → cap to **0.86** (stays visible in the review band, never auto-matches); else ×0.5. Applies to BOTH: **unit mismatch** (both have units, differ — the 900-unit-complex rule, see §7) AND **bare-vs-suffixed street number** (`41` vs `41a` — usually different dwellings on a subdivided lot; found auto-matching in live PPG data).
 
 **`matchSite(woAddress, sites, opts)` → decision:**
 - Thresholds (defaults): `acceptAt = 0.93`, `reviewAt = 0.75`, `minGap = 0.04`.
 - Score all candidates, keep those `≥ reviewAt*0.8` (0.60), sort desc.
 - **Duplicate detection:** other candidates whose `canonical` == the top's canonical = same physical address, different Simpro site id (data-quality dupes).
 - **Agency disambiguation:** if the WO's agency (`preferCustomerId`) uniquely owns one of the close candidates, lock to it (`agencyConfirmed`).
-- **`unitMismatch` flag:** same building, different/unknown unit.
+- **`unitMismatch` flag:** same building, different/unknown unit. Computed against the units revealed by **ANY** of the record's address strings (2026-08-05): Simpro records often carry the unit only in the NAME while the address line omits it — the unit-less string used to sail past the cap at 0.98 and could auto-match a wrong unit. Now: if the WO names a unit no string of the record corroborates (different unit in the name, or a bare building record), the score is capped into the review band and flagged. The record whose name reveals the CORRECT unit is unaffected.
+- **`numberConflict` flag:** street numbers agree only across a bare/suffixed split (`41` vs `41a`) — same treatment as `unitMismatch` in the cascade.
 - **Decision cascade:**
   1. duplicate & no agency → `review` (never guess the billing record)
-  2. **unitMismatch → `review`** (never auto-match a sibling unit, even under agency)
+  2. **unitMismatch or numberConflict → `review`** (never auto-match a sibling unit or a suffixed-number sibling, even under agency)
   3. agency-confirmed & ≥reviewAt → `match`
   4. ≥acceptAt & clear of runner-up by minGap → `match`
   5. ≥reviewAt → `review`
@@ -118,7 +119,7 @@ The decision logic here is **market-agnostic**: once US unit notation parses (§
 - **Engine:** `lib/flowpro/address-matcher.ts` (normalize + score + match), `lib/flowpro/service.ts` (resolve/learn/sync + `parseDisplayAddress`).
 - **Routes:** `app/api/flowpro/{resolve,learn,resolve-customer,sync-sites,sync-customers}/route.ts`; auth in `lib/flowpro/http.ts`.
 - **Tools:** `lib/flowpro/measure.ts` (`--validate` replays known-good WOs vs the live mirror), `lib/flowpro/backfill.ts` (validated memory seeding).
-- **Tests:** `npx tsx lib/flowpro/address-matcher.test.ts` → **21/21** (includes 3 Houston/unit cases). Needs `tsx` (`pnpm add -D tsx`) or compile with local `tsc` + run on node.
+- **Tests:** `npx tsx lib/flowpro/address-matcher.test.ts` → **29/29** (includes 3 Houston/unit cases + 8 sibling-premises safety cases). Needs `tsx` (`pnpm add -D tsx`) or compile with local `tsc` + run on node.
 - **Workflows:** `n8n-workflows/` (gitignored — embed the webhook secret; import into n8n directly).
 - **Diagnostics (read-only psql on `POSTGRES_URL`):** mirror freshness `SELECT count(*),max(synced_at) FROM flowpro_sites`; memory growth `… GROUP BY source FROM flowpro_site_map`; duplicate density on `address_key`; replay a failing address by POSTing to `/api/flowpro/resolve`.
 

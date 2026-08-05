@@ -170,8 +170,10 @@ export interface ScoredCandidate {
   customerName: string | null;
   /** Normalized address key of this candidate — used to detect duplicate records. */
   canonical: string;
-  /** True when this is the same building as the work order but a DIFFERENT unit. */
+  /** True when this is the same building as the work order but a DIFFERENT (or unknown) unit. */
   unitMismatch?: boolean;
+  /** True when the street numbers agree only across a bare/suffixed split ("41" vs "41a"). */
+  numberConflict?: boolean;
 }
 
 export type Decision = 'match' | 'review' | 'no-match';
@@ -329,6 +331,21 @@ export function numbersMatch(a: string, b: string): boolean {
   return pa.lo <= pb.hi && pb.lo <= pa.hi;
 }
 
+/**
+ * "41" vs "41a": numbersMatch lets the pair through (people drop suffixes all
+ * the time), but when exactly ONE side carries a suffix the two are usually
+ * DIFFERENT dwellings on a subdivided lot. Such a pair may be shown to a human,
+ * never auto-matched.
+ */
+export function numberSuffixConflict(a: string, b: string): boolean {
+  if (!a || !b || a === b) return false;
+  const re = /^(\d+)(?:-(\d+))?([a-z]+)?$/;
+  const ma = re.exec(a);
+  const mb = re.exec(b);
+  if (!ma || !mb) return false;
+  return !!ma[3] !== !!mb[3] && numbersMatch(a, b);
+}
+
 export function scorePair(wo: NormalizedAddress, site: NormalizedAddress): number {
   if (wo.number && site.number && !numbersMatch(wo.number, site.number)) return 0;
 
@@ -362,14 +379,18 @@ export function scorePair(wo: NormalizedAddress, site: NormalizedAddress): numbe
     s = wo.postcode === site.postcode ? Math.min(1, s + 0.02) : s * 0.85;
   }
 
-  // A different unit is a different home — never auto-match "1/185A" to "3/185A".
-  // But when the rest of the address is a strong BUILDING match (same number,
-  // street and suburb), keep the sibling unit visible in the REVIEW band instead
+  // Sibling premises are a different home — never auto-match one to another:
+  //  - "1/185A" vs "3/185A": different unit, same building;
+  //  - "41" vs "41a": bare number vs suffixed sibling (subdivided lot).
+  // When the rest of the address is a strong BUILDING match (same number,
+  // street and suburb), keep the sibling visible in the REVIEW band instead
   // of burying it: a work order for unit 6 at a building we already service as
   // units 4 and 7 must be human-confirmed, not silently treated as brand-new.
   // The correct-unit site (if present) has no penalty, so it still outranks and
   // wins. (This is the 900-unit-complex case: one address, many units.)
-  if (wo.unit && site.unit && wo.unit !== site.unit) {
+  const unitDiffers = wo.unit && site.unit && wo.unit !== site.unit;
+  const suffixDiffers = wo.number && site.number && numberSuffixConflict(wo.number, site.number);
+  if (unitDiffers || suffixDiffers) {
     s = s >= 0.9 ? 0.86 : s * 0.5;
   }
 
@@ -404,15 +425,27 @@ export function matchSite(
   // address string (needed to spot duplicate site records for the same address).
   const scoredAll: ScoredCandidate[] = sites
     .map((site) => {
-      let best = { score: 0, canonical: '', unit: '' };
+      let best = { score: 0, canonical: '', unit: '', number: '' };
+      const unitsRevealed = new Set<string>();
       for (const str of candidateAddressStrings(site)) {
         const n = normalizeAddress(str);
+        if (n.unit) unitsRevealed.add(n.unit);
         const sc = scorePair(wo, n);
-        if (sc >= best.score) best = { score: sc, canonical: n.canonical, unit: n.unit };
+        if (sc >= best.score) best = { score: sc, canonical: n.canonical, unit: n.unit, number: n.number };
       }
-      // Same building (score landed in/above the review band) but a different
-      // unit than the work order → a sibling unit; must be reviewed, not matched.
-      const unitMismatch = !!(wo.unit && best.unit && wo.unit !== best.unit && best.score >= reviewAt);
+      // The record's unit often lives only in its NAME while the address line
+      // omits it ("4/17 Leadenhall St" / line "17 Leadenhall St"). If the work
+      // order names a unit that NO string of this record corroborates, the
+      // unit-less string must not carry the pair past the review band — it's
+      // the same building but a different (or unknown) door. §7: review with
+      // siblings visible, never a silent wrong-unit match.
+      const unitMismatch = !!(wo.unit && best.score >= reviewAt && !unitsRevealed.has(wo.unit));
+      if (unitMismatch && best.score >= 0.9) best.score = 0.86;
+      // Bare vs suffixed street number ("41" vs "41a") — scorePair already caps
+      // the score; flag it so no later step (agency confirmation) promotes it.
+      const numberConflict = !!(
+        wo.number && best.number && best.score >= reviewAt && numberSuffixConflict(wo.number, best.number)
+      );
       return {
         id: site.id,
         name: site.name || '',
@@ -421,6 +454,7 @@ export function matchSite(
         customerName: site.customerName ?? null,
         canonical: best.canonical,
         unitMismatch,
+        numberConflict,
       };
     })
     .filter((c) => c.score >= reviewAt * 0.8)
@@ -454,10 +488,10 @@ export function matchSite(
     // Multiple records for the same address and the agency didn't uniquely
     // resolve them — never guess which billing record; ask a human.
     decision = best && best.score >= reviewAt ? 'review' : 'no-match';
-  } else if (best?.unitMismatch) {
-    // Right building, WRONG unit (the correct unit isn't in the pool). Never
-    // auto-match to a sibling unit — even under agency confirmation — and never
-    // treat it as brand-new without a human seeing the sibling units first.
+  } else if (best?.unitMismatch || best?.numberConflict) {
+    // Right building, WRONG door (sibling unit, or bare-vs-suffixed number).
+    // Never auto-match — even under agency confirmation — and never treat it
+    // as brand-new without a human seeing the siblings first.
     decision = best.score >= reviewAt ? 'review' : 'no-match';
   } else if (agencyConfirmed && best && best.score >= reviewAt) {
     decision = 'match';
