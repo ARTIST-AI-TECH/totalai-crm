@@ -152,17 +152,7 @@ export async function resolveSite(input: {
   }
 
   // L1 — fuzzy match against the local mirror of Simpro sites.
-  const rows = await db
-    .select()
-    .from(flowproSites)
-    .where(and(eq(flowproSites.teamId, TEAM_ID), eq(flowproSites.archived, false)));
-
-  const candidates: SiteCandidateInput[] = rows.map((r) => ({
-    id: r.simproSiteId,
-    name: r.name,
-    address: { line: r.addressLine, city: r.city, state: r.state, postcode: r.postcode },
-    customerIds: (r.customerIds as number[] | null) || [],
-  }));
+  const candidates = await loadSiteCandidates();
 
   const result = matchSite(input.rawAddress, candidates, { ...input.opts, preferCustomerId });
   const best = result.best;
@@ -184,9 +174,59 @@ export async function resolveSite(input: {
     customerName: resolvedCustomerId ? await customerNameFor(resolvedCustomerId) : null,
     score: best?.score,
     candidates: result.candidates,
-    sitesInPool: rows.length,
+    sitesInPool: candidates.length,
     parsed,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Site candidate pool — cached per server instance.
+//
+// EGRESS: re-reading the whole mirror (~20k rows, incl. raw_data) on every
+// /resolve call cost ~550 GB of Supabase egress. Now the pool is held in memory
+// and only re-read when a cheap fingerprint (row count + newest updated_at)
+// changes — i.e. after a sync that actually changed something. Only the columns
+// the matcher needs are selected; raw_data never leaves the database here.
+// ---------------------------------------------------------------------------
+let siteCache: { fingerprint: string; candidates: SiteCandidateInput[] } | null = null;
+let siteLoad: Promise<SiteCandidateInput[]> | null = null;
+
+async function loadSiteCandidates(): Promise<SiteCandidateInput[]> {
+  const [fp] = await db
+    .select({ n: sql<number>`count(*)`, last: sql<string>`max(${flowproSites.updatedAt})::text` })
+    .from(flowproSites)
+    .where(eq(flowproSites.teamId, TEAM_ID));
+  const fingerprint = `${fp?.n}:${fp?.last}`;
+  if (siteCache?.fingerprint === fingerprint) return siteCache.candidates;
+
+  // Collapse concurrent cold loads on the same instance into one query.
+  siteLoad ??= (async () => {
+    try {
+      const rows = await db
+        .select({
+          simproSiteId: flowproSites.simproSiteId,
+          name: flowproSites.name,
+          addressLine: flowproSites.addressLine,
+          city: flowproSites.city,
+          state: flowproSites.state,
+          postcode: flowproSites.postcode,
+          customerIds: flowproSites.customerIds,
+        })
+        .from(flowproSites)
+        .where(and(eq(flowproSites.teamId, TEAM_ID), eq(flowproSites.archived, false)));
+      const candidates: SiteCandidateInput[] = rows.map((r) => ({
+        id: r.simproSiteId,
+        name: r.name,
+        address: { line: r.addressLine, city: r.city, state: r.state, postcode: r.postcode },
+        customerIds: (r.customerIds as number[] | null) || [],
+      }));
+      siteCache = { fingerprint, candidates };
+      return candidates;
+    } finally {
+      siteLoad = null;
+    }
+  })();
+  return siteLoad;
 }
 
 async function customerNameFor(customerId: number): Promise<string | null> {
@@ -342,8 +382,15 @@ export async function resolveCustomer(input: {
   }
 
   // C1 — match against the customer mirror by observed contact email domains.
+  // (raw_data deliberately not selected — egress.)
   const custs = await db
-    .select()
+    .select({
+      simproCustomerId: flowproCustomers.simproCustomerId,
+      companyName: flowproCustomers.companyName,
+      givenName: flowproCustomers.givenName,
+      familyName: flowproCustomers.familyName,
+      emailDomains: flowproCustomers.emailDomains,
+    })
     .from(flowproCustomers)
     .where(eq(flowproCustomers.teamId, TEAM_ID));
 
@@ -449,6 +496,11 @@ export async function syncSites(sites: SimproSitePayload[]): Promise<{ upserted:
           syncedAt: sql`excluded.synced_at`,
           updatedAt: new Date(),
         },
+        // Every column derives from raw_data, so an identical payload means
+        // nothing changed: skip the rewrite. Keeps updated_at meaningful (it
+        // drives the resolver's cache fingerprint) and avoids rewriting ~20k
+        // rows every hourly sync.
+        setWhere: sql`${flowproSites.rawData} is distinct from excluded.raw_data`,
       });
   }
   return { upserted: rows.length };
